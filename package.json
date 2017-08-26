@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "budo --dir docs docs/code.js:index.js --live"
+    "test": "budo --dir docs docs/code.js:index.js --live",
+    "build": "browserify docs/code.js -o docs/index.js"
   },
   "repository": {
     "type": "git",
