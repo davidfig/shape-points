@@ -28,11 +28,13 @@ function draw(c, points)
 window.onload = function ()
 {
     const canvas = document.getElementById('canvas')
-    canvas.width = 500
+    canvas.width = 1000
     canvas.height = 200
     const c = canvas.getContext('2d')
 
-    draw(c, ShapePoints.roundedRect(125, 100, 200, 100, 30))
+    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
+    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
+    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
 
     require('./highlight')()
 }

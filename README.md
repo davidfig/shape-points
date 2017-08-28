@@ -36,7 +36,11 @@ get points for a rounded rect
  - {number} y - center of rect
  - {number} width of rectangle
  - {number} height of rectangle
- - {number} radius of corner  
+ - {number|object} radius of corner(s)
+ - {number} radius.topLeft
+ - {number} radius.topRight
+ - {number} radius.bottomLeft
+ - {number} radius.bottomRight  
  - @returns {number[]} array of points in form of [x1, y1, x2, y2, ... xn, yn] 
 
 ### pointsInArc
