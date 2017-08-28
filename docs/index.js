@@ -29,11 +29,13 @@ function draw(c, points)
 window.onload = function ()
 {
     const canvas = document.getElementById('canvas')
-    canvas.width = 500
+    canvas.width = 1000
     canvas.height = 200
     const c = canvas.getContext('2d')
 
-    draw(c, ShapePoints.roundedRect(125, 100, 200, 100, 30))
+    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
+    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
+    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
 
     require('./highlight')()
 }
@@ -72,8 +74,77 @@ function arc(x, y, start, end, radius)
     return points
 }
 
+/**
+ * Adjustable rounded rectangle
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @param {object} radii
+ * @param {number} [radii.topLeft]
+ * @param {number} [radii.topRight]
+ * @param {number} [radii.bottomLeft]
+ * @param {number} [radii.bottomRight]
+ */
+function roundedRectEach(x, y, width, height, radii)
+{
+    radii.topLeft = radii.topLeft || 0
+    radii.topRight = radii.topRight || 0
+    radii.bottomLeft = radii.bottomLeft || 0
+    radii.bottomRight = radii.bottomRight || 0
+    const points = [
+        x - width / 2 + radii.topLeft, y - height / 2,
+        x + width / 2 - radii.topRight, y - height / 2
+    ]
+    if (radii.topRight)
+    {
+        points.push(...arc(x + width / 2 - radii.topRight, y - height / 2 + radii.topRight, 3 * Math.PI / 2, 0, radii.topRight))
+    }
+    points.push(
+        x + width / 2, y - height / 2 + radii.topRight,
+        x + width / 2, y + height / 2 - radii.bottomRight
+    )
+    if (radii.bottomRight)
+    {
+        points.push(...arc(x + width / 2 - radii.bottomRight, y + height / 2 - radii.bottomRight, 0, Math.PI / 2, radii.bottomRight))
+    }
+    points.push(
+        x + width / 2 - radii.bottomRight, y + height / 2,
+        x - width / 2 + radii.bottomLeft, y + height / 2
+    )
+    if (radii.bottomLeft)
+    {
+        points.push(...arc(x - width / 2 + radii.bottomLeft, y + height / 2 - radii.bottomLeft, Math.PI / 2, Math.PI, radii.bottomLeft))
+    }
+    points.push(
+        x - width / 2, y + height / 2 - radii.bottomLeft,
+        x - width / 2, y - height / 2 + radii.topLeft
+    )
+    if (radii.topLeft)
+    {
+        points.push(...arc(x - width / 2 + radii.topLeft, y - height / 2 + radii.topLeft, Math.PI, 3 * Math.PI / 2, radii.topLeft))
+    }
+    return points
+}
+
+/**
+ * Normal rounded rectangle
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @param {number|object} radius
+ * @param {number} [radius.topLeft]
+ * @param {number} [radius.topRight]
+ * @param {number} [radius.bottomLeft]
+ * @param {number} [radius.bottomRight]
+ */
 function roundedRect(x, y, width, height, radius)
 {
+    if (isNaN(radius))
+    {
+        return roundedRectEach(x, y, width, height, radius)
+    }
     const points = [
         x - width / 2 + radius, y - height / 2,
         x + width / 2 - radius, y - height / 2,
