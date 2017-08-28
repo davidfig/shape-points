@@ -19,6 +19,8 @@ function test()
     draw(c, ShapePoints.line(700, 50, 750, 125, 25))
 
     draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
+
+    draw(c, ShapePoints.circle(125, 250, 75))
 }
 
 function circle(c, x, y, radius)
@@ -50,7 +52,7 @@ window.onload = function ()
 {
     const canvas = document.getElementById('canvas')
     canvas.width = 1000
-    canvas.height = 200
+    canvas.height = 400
     c = canvas.getContext('2d')
 
     test()
@@ -78,6 +80,33 @@ const Angle = require('yy-angle')
 
 let _pointsInArc = 5
 
+/**
+ * points in rectangle
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function rect(x, y, width, height)
+{
+    return [
+        x - width / 2, y - height / 2,
+        x + width / 2, y - height / 2,
+        x + width / 2, y + height / 2,
+        x - width / 2, y + height / 2
+    ]
+}
+
+/**
+ * points in arc
+ * @param {number} x
+ * @param {number} y
+ * @param {number} start angle (radians)
+ * @param {number} end angle (radians)
+ * @param {number} radius
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
 function arc(x, y, start, end, radius)
 {
     const points = []
@@ -91,18 +120,6 @@ function arc(x, y, start, end, radius)
     return points
 }
 
-/**
- * Adjustable rounded rectangle
- * @param {number} x
- * @param {number} y
- * @param {number} width
- * @param {number} height
- * @param {object} radii
- * @param {number} [radii.topLeft]
- * @param {number} [radii.topRight]
- * @param {number} [radii.bottomLeft]
- * @param {number} [radii.bottomRight]
- */
 function roundedRectEach(x, y, width, height, radii)
 {
     radii.topLeft = radii.topLeft || 0
@@ -145,7 +162,7 @@ function roundedRectEach(x, y, width, height, radii)
 }
 
 /**
- * Normal rounded rectangle
+ * rounded rectangle
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -155,6 +172,7 @@ function roundedRectEach(x, y, width, height, radii)
  * @param {number} [radius.topRight]
  * @param {number} [radius.bottomLeft]
  * @param {number} [radius.bottomRight]
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function roundedRect(x, y, width, height, radius)
 {
@@ -179,23 +197,6 @@ function roundedRect(x, y, width, height, radius)
 }
 
 /**
- * rectangle
- * @param {number} x
- * @param {number} y
- * @param {number} width
- * @param {number} height
- */
-function rect(x, y, width, height)
-{
-    return [
-        x - width / 2, y - height / 2,
-        x + width / 2, y - height / 2,
-        x + width / 2, y + height / 2,
-        x - width / 2, y + height / 2
-    ]
-}
-
-/**
  * line with thickness
  * @param {number} x1
  * @param {number} y1
@@ -204,6 +205,7 @@ function rect(x, y, width, height)
  * @param {number|object} [thickness]
  * @param {number} thickness.start
  * @param {number} thickness.end
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function line(x1, y1, x2, y2, thickness)
 {
@@ -219,11 +221,30 @@ function line(x1, y1, x2, y2, thickness)
     ]
 }
 
+/**
+ * circle
+ * @param {number} x
+ * @param {number} y
+ * @param {number} radius
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function circle(x, y, radius)
+{
+    const points = []
+    const interval = Math.PI * 2 / (_pointsInArc * 4)
+    for (let i = 0; i < _pointsInArc * 4 - interval * 2; i += interval)
+    {
+        points.push(x + Math.cos(i) * radius, y + Math.sin(i) * radius)
+    }
+    return points
+}
+
 module.exports = {
     arc,
     rect,
     roundedRect,
     line,
+    circle,
     get pointsInArc()
     {
         return _pointsInArc
