@@ -86,7 +86,7 @@ function roundedRect(x, y, width, height, radius)
     {
         return roundedRectEach(x, y, width, height, radius)
     }
-    const points = [
+    return [
         x - width / 2 + radius, y - height / 2,
         x + width / 2 - radius, y - height / 2,
         ...arc(x + width / 2 - radius, y - height / 2 + radius, 3 * Math.PI / 2, 0, radius),
@@ -100,11 +100,21 @@ function roundedRect(x, y, width, height, radius)
         x - width / 2, y - height / 2 + radius,
         ...arc(x - width / 2 + radius, y - height / 2 + radius, Math.PI, 3 * Math.PI / 2, radius),
     ]
-    return points
+}
+
+function rect(x, y, width, height)
+{
+    return [
+        x - width / 2, y - height / 2,
+        x + width / 2, y - height / 2,
+        x + width / 2, y + height / 2,
+        x - width / 2, y + height / 2
+    ]
 }
 
 module.exports = {
     arc,
+    rect,
     roundedRect,
     get pointsInArc()
     {

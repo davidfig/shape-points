@@ -21,6 +21,14 @@ https://davidfig.github.io/shape-points/
 
 ## API
 
+### function rect(x, y, width, height)
+get points for a rectangle
+ - {number} x - center of rectangle
+ - {number} y - center of rectangle
+ - {number} width
+ - {number} height
+ - @returns {number[]} array of points in form of [x1, y1, x2, y2, ... xn, yn]
+
 ### function arc(x, y, start, end, radius)
 get points for an arc
  - {number} x - center of arc

@@ -36,5 +36,6 @@ window.onload = function ()
     draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
     draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
 
+    draw(c, ShapePoints.rect(600, 100, 100, 75))
     require('./highlight')()
 }
