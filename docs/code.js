@@ -1,5 +1,25 @@
 const ShapePoints = require('..')
 
+let c
+
+function test()
+{
+    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
+    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
+    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
+
+    draw(c, ShapePoints.rect(600, 100, 100, 75))
+
+    // draw lighter test line without thickness
+    c.globalAlpha = 0.1
+    draw(c, ShapePoints.line(700, 50, 750, 125))
+    c.globalAlpha = 1
+
+    draw(c, ShapePoints.line(700, 50, 750, 125, 25))
+
+    draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
+}
+
 function circle(c, x, y, radius)
 {
     c.beginPath()
@@ -30,12 +50,8 @@ window.onload = function ()
     const canvas = document.getElementById('canvas')
     canvas.width = 1000
     canvas.height = 200
-    const c = canvas.getContext('2d')
+    c = canvas.getContext('2d')
 
-    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
-    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
-    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
-
-    draw(c, ShapePoints.rect(600, 100, 100, 75))
+    test()
     require('./highlight')()
 }

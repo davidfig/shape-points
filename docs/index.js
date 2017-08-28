@@ -1,6 +1,26 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 const ShapePoints = require('..')
 
+let c
+
+function test()
+{
+    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
+    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
+    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
+
+    draw(c, ShapePoints.rect(600, 100, 100, 75))
+
+    // draw lighter test line without thickness
+    c.globalAlpha = 0.1
+    draw(c, ShapePoints.line(700, 50, 750, 125))
+    c.globalAlpha = 1
+
+    draw(c, ShapePoints.line(700, 50, 750, 125, 25))
+
+    draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
+}
+
 function circle(c, x, y, radius)
 {
     c.beginPath()
@@ -31,13 +51,9 @@ window.onload = function ()
     const canvas = document.getElementById('canvas')
     canvas.width = 1000
     canvas.height = 200
-    const c = canvas.getContext('2d')
+    c = canvas.getContext('2d')
 
-    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
-    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
-    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
-
-    draw(c, ShapePoints.rect(600, 100, 100, 75))
+    test()
     require('./highlight')()
 }
 },{"..":3,"./highlight":2}],2:[function(require,module,exports){
@@ -162,6 +178,13 @@ function roundedRect(x, y, width, height, radius)
     ]
 }
 
+/**
+ * rectangle
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ */
 function rect(x, y, width, height)
 {
     return [
@@ -172,10 +195,35 @@ function rect(x, y, width, height)
     ]
 }
 
+/**
+ * line with thickness
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number|object} [thickness]
+ * @param {number} thickness.start
+ * @param {number} thickness.end
+ */
+function line(x1, y1, x2, y2, thickness)
+{
+    thickness = thickness || 0
+    const angle = Math.atan2(y2 - y1, x2 - x1)
+    const perp = angle - Math.PI / 2
+    const half = isNaN(thickness) ? { start: thickness.start / 2, end: thickness.end / 2 } : { start: thickness / 2, end: thickness / 2 }
+    return [
+        x1 - Math.cos(perp) * half.start, y1 - Math.sin(perp) * half.start,
+        x2 - Math.cos(perp) * half.end, y2 - Math.sin(perp) * half.end,
+        x2 + Math.cos(perp) * half.end, y2 + Math.sin(perp) * half.end,
+        x1 + Math.cos(perp) * half.start, y1 + Math.sin(perp) * half.start
+    ]
+}
+
 module.exports = {
     arc,
     rect,
     roundedRect,
+    line,
     get pointsInArc()
     {
         return _pointsInArc
