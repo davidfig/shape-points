@@ -18,6 +18,8 @@ function test()
     draw(c, ShapePoints.line(700, 50, 750, 125, 25))
 
     draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
+
+    draw(c, ShapePoints.circle(125, 250, 75))
 }
 
 function circle(c, x, y, radius)
@@ -49,7 +51,7 @@ window.onload = function ()
 {
     const canvas = document.getElementById('canvas')
     canvas.width = 1000
-    canvas.height = 200
+    canvas.height = 400
     c = canvas.getContext('2d')
 
     test()

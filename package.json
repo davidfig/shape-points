@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "budo --dir docs docs/code.js:index.js --live",
-    "build": "browserify docs/code.js -o docs/index.js"
+    "build": "browserify docs/code.js -o docs/index.js",
+    "docs": "markdown-api index.js README.md"
   },
   "repository": {
     "type": "git",
