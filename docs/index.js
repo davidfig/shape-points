@@ -37,6 +37,7 @@ window.onload = function ()
     draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
     draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
 
+    draw(c, ShapePoints.rect(600, 100, 100, 75))
     require('./highlight')()
 }
 },{"..":3,"./highlight":2}],2:[function(require,module,exports){
@@ -145,7 +146,7 @@ function roundedRect(x, y, width, height, radius)
     {
         return roundedRectEach(x, y, width, height, radius)
     }
-    const points = [
+    return [
         x - width / 2 + radius, y - height / 2,
         x + width / 2 - radius, y - height / 2,
         ...arc(x + width / 2 - radius, y - height / 2 + radius, 3 * Math.PI / 2, 0, radius),
@@ -159,11 +160,21 @@ function roundedRect(x, y, width, height, radius)
         x - width / 2, y - height / 2 + radius,
         ...arc(x - width / 2 + radius, y - height / 2 + radius, Math.PI, 3 * Math.PI / 2, radius),
     ]
-    return points
+}
+
+function rect(x, y, width, height)
+{
+    return [
+        x - width / 2, y - height / 2,
+        x + width / 2, y - height / 2,
+        x + width / 2, y + height / 2,
+        x - width / 2, y + height / 2
+    ]
 }
 
 module.exports = {
     arc,
+    rect,
     roundedRect,
     get pointsInArc()
     {
