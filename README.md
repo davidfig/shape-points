@@ -1,5 +1,5 @@
 # shape-points
-Generate coordinates for simple geometric shapes, such as arcs and rounded rectangles
+Generate coordinates for simple geometric shapes, such as arcs, rectangles, rounded rectangles, bezier curves
 
 ## rationale
 
@@ -78,6 +78,20 @@ function line(x1, y1, x2, y2, thickness)
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function circle(x, y, radius)
+
+/**
+ * Calculate points for a bezier curve
+ * from https://stackoverflow.com/a/15399173/1955997
+ * @param {number} x1 - starting point (usually a moveTo)
+ * @param {number} y1 - starting point
+ * @param {number} cp1x - first control point
+ * @param {number} cp1y - first control point
+ * @param {number} cp2x - second control point
+ * @param {number} cp2y - second control point
+ * @param {number} x2 - ending point
+ * @param {number} y2 - ending point
+ */
+function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 ```
 ## License  
 MIT License  

@@ -20,16 +20,26 @@ function test()
     draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
 
     draw(c, ShapePoints.circle(125, 250, 75))
+
+    circle(c, 250, 250, 5, 'green') // control point
+    circle(c, 300, 250, 5, 'green') // control point
+    circle(c, 250, 200, 5, 'green') // control point
+    circle(c, 330, 190, 5, 'green') // control point
+    draw(c, ShapePoints.bezierCurveTo(250, 250, 250, 200, 330, 190, 300, 250), true)
 }
 
-function circle(c, x, y, radius)
+function circle(c, x, y, radius, color)
 {
+    if (typeof color !== 'undefined')
+    {
+        c.strokeStyle = color
+    }
     c.beginPath()
     c.arc(x, y, radius, 0, Math.PI * 2)
     c.stroke()
 }
 
-function draw(c, points)
+function draw(c, points, noClose)
 {
     c.strokeStyle = 'black'
     c.beginPath()
@@ -38,7 +48,10 @@ function draw(c, points)
     {
         c.lineTo(points[i], points[i + 1])
     }
-    c.closePath()
+    if (!noClose)
+    {
+        c.closePath()
+    }
     c.stroke()
     c.strokeStyle = 'red'
     for (let i = 0; i < points.length; i += 2)

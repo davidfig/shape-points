@@ -1,6 +1,6 @@
 {
   "name": "shape-points",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
   "main": "index.js",
   "directories": {
@@ -23,7 +23,9 @@
     "rounded rectangle",
     "line",
     "arc",
-    "circle"
+    "circle",
+    "bezier",
+    "bezierCurveTo"
   ],
   "author": "David Figatner",
   "license": "MIT",
