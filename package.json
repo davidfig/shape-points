@@ -1,6 +1,6 @@
 {
   "name": "shape-points",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,8 @@
   "scripts": {
     "test": "budo --dir docs docs/code.js:index.js --live",
     "build": "browserify docs/code.js -o docs/index.js",
-    "docs": "markdown-api index.js README.md"
+    "docs": "markdown-api index.js README.md",
+    "prepublishOnly": "npm run build && npm run docs"
   },
   "repository": {
     "type": "git",

@@ -4,42 +4,53 @@ let c
 
 function test()
 {
-    draw(c, ShapePoints.roundedRect(125, 100, 150, 100, 30))
-    draw(c, ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
-    draw(c, ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
+    control(125, 100)
+    draw(ShapePoints.roundedRect(125, 100, 150, 100, 30))
 
-    draw(c, ShapePoints.rect(600, 100, 100, 75))
+    control(300, 100)
+    draw(ShapePoints.roundedRect(300, 100, 100, 100, { topLeft: 30, bottomLeft: 60 }))
 
-    // draw lighter test line without thickness
-    c.globalAlpha = 0.1
-    draw(c, ShapePoints.line(700, 50, 750, 125))
-    c.globalAlpha = 1
+    control(450, 100)
+    draw(ShapePoints.roundedRect(450, 100, 100, 100, { topRight: 60, bottomRight: 30 }))
 
-    draw(c, ShapePoints.line(700, 50, 750, 125, 25))
+    control(600, 100)
+    draw(ShapePoints.rect(600, 100, 100, 75))
 
-    draw(c, ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
+    control(700, 50, 750, 125)
+    draw(ShapePoints.line(700, 50, 750, 125, 25))
 
-    draw(c, ShapePoints.circle(125, 250, 75))
+    control(775, 50, 825, 125)
+    draw(ShapePoints.line(775, 50, 825, 125, { start: 10, end: 50 }))
 
-    circle(c, 250, 250, 5, 'green') // control point
-    circle(c, 300, 250, 5, 'green') // control point
-    circle(c, 250, 200, 5, 'green') // control point
-    circle(c, 330, 190, 5, 'green') // control point
-    draw(c, ShapePoints.bezierCurveTo(250, 250, 250, 200, 330, 190, 300, 250), true)
+    control(125, 250)
+    draw(ShapePoints.circle(125, 250, 75))
+
+    control(250, 250, 300, 250, 250, 200, 330, 190)
+    draw(ShapePoints.bezierCurveTo(250, 250, 250, 200, 330, 190, 300, 250), true)
 }
 
-function circle(c, x, y, radius, color)
+function control()
 {
-    if (typeof color !== 'undefined')
+    for (let i = 0; i < arguments.length; i += 2)
     {
-        c.strokeStyle = color
+        circle(arguments[i], arguments[i + 1], 5, 'green')
     }
+}
+
+function point(x, y)
+{
+    circle(x, y, 3, 'red')
+}
+
+function circle(x, y, radius, color)
+{
     c.beginPath()
+    c.strokeStyle = color
     c.arc(x, y, radius, 0, Math.PI * 2)
     c.stroke()
 }
 
-function draw(c, points, noClose)
+function draw(points, noClose)
 {
     c.strokeStyle = 'black'
     c.beginPath()
@@ -53,10 +64,9 @@ function draw(c, points, noClose)
         c.closePath()
     }
     c.stroke()
-    c.strokeStyle = 'red'
     for (let i = 0; i < points.length; i += 2)
     {
-        circle(c, points[i], points[i + 1], 3)
+        point(points[i], points[i + 1])
     }
 }
 
