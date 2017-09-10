@@ -22,7 +22,7 @@ https://davidfig.github.io/shape-points/
 ## API
 ```
 /**
- * points in rectangle
+ * calculate points for rectangle
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -32,7 +32,7 @@ https://davidfig.github.io/shape-points/
 function rect(x, y, width, height)
 
 /**
- * points in arc
+ * calculate points for arc
  * @param {number} x
  * @param {number} y
  * @param {number} start angle (radians)
@@ -43,7 +43,7 @@ function rect(x, y, width, height)
 function arc(x, y, start, end, radius)
 
 /**
- * rounded rectangle
+ * calculate points for a rounded rectangle with one corner radius, or 4 separate corner radii
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -58,7 +58,7 @@ function arc(x, y, start, end, radius)
 function roundedRect(x, y, width, height, radius)
 
 /**
- * line with thickness
+ * calculate points for a line with a certain thickness (either one thickness or a starting and ending thickness)
  * @param {number} x1
  * @param {number} y1
  * @param {number} x2
@@ -71,7 +71,7 @@ function roundedRect(x, y, width, height, radius)
 function line(x1, y1, x2, y2, thickness)
 
 /**
- * circle
+ * calculate points for a circle (calculates using pointsInArc * 4)
  * @param {number} x
  * @param {number} y
  * @param {number} radius
@@ -80,7 +80,7 @@ function line(x1, y1, x2, y2, thickness)
 function circle(x, y, radius)
 
 /**
- * Calculate points for a bezier curve
+ * Calculate points for a bezier curve with a starting point and two control points
  * from https://stackoverflow.com/a/15399173/1955997
  * @param {number} x1 - starting point (usually a moveTo)
  * @param {number} y1 - starting point
@@ -95,7 +95,7 @@ function circle(x, y, radius)
 function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 
 /**
- * Calculate bezier curve(s) that pass through a series of points
+ * Calculate points for smooth bezier curves passing through a series of points
  * based on https://www.particleincell.com/2012/bezier-splines/
  * @param {number} x1 - starting point
  * @param {number} y1
