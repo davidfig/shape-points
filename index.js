@@ -172,6 +172,7 @@ function circle(x, y, radius)
  * @param {number} cp2y - second control point
  * @param {number} x2 - ending point
  * @param {number} y2 - ending point
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 {
@@ -192,6 +193,112 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
     return points
 }
 
+
+/**
+ * Calculate bezier curve(s) that pass through a series of points
+ * based on https://www.particleincell.com/2012/bezier-splines/
+ * @param {number} x1 - starting point
+ * @param {number} y1
+ * @param {number} [x2]
+ * @param {number} [y2]
+ * ...
+ * @param {number} xn - ending point
+ * @param {number} yn
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function bezierCurveThrough()
+{
+    function updateCoordinate(K)
+    {
+        const p1 = []
+        const p2 = []
+        let n = K.length - 1
+
+        /* rhs vector */
+        const a = []
+        const b = []
+        const c = []
+        const r = []
+
+        /* left most segment */
+        a[0] = 0
+        b[0] = 2
+        c[0] = 1
+        r[0] = K[0] + 2 * K[1]
+
+        /* internal segments */
+        for (let i = 1; i < n - 1; i++)
+        {
+            a[i] = 1
+            b[i] = 4
+            c[i] = 1
+            r[i] = 4 * K[i] + 2 * K[i + 1]
+        }
+
+        /* right segment */
+        a[n - 1] = 2
+        b[n - 1] = 7
+        c[n - 1] = 0
+        r[n - 1] = 8 * K[n - 1] + K[n]
+
+        /* solves Ax=b with the Thomas algorithm (from Wikipedia) */
+        for (let i = 1; i < n; i++)
+        {
+            const m = a[i] / b[i - 1]
+            b[i] -= m * c[i - 1]
+            r[i] -= m * r[i - 1]
+        }
+
+        p1[n - 1] = r[n - 1] / b[n - 1]
+        for (let i = n - 2; i >= 0; --i)
+            p1[i] = (r[i] - c[i] * p1[i + 1]) / b[i]
+
+        /* we have p1, now compute p2 */
+        for (let i = 0; i < n - 1; i++)
+            p2[i] = 2 * K[i + 1] - p1[i + 1]
+
+        p2[n - 1] = 0.5 * (K[n] + p1[n - 1])
+        return [p1, p2]
+    }
+
+    const xs = [], ys = []
+    for (let i = 0; i < arguments.length; i += 2)
+    {
+        xs.push(arguments[i])
+        ys.push(arguments[i + 1])
+    }
+
+    // not enough points
+    if (arguments.length <= 4)
+    {
+        return
+    }
+
+    // two points creates a line
+    if (arguments.length === 4)
+    {
+        return [arguments[0], arguments[1], arguments[2], arguments[3]]
+    }
+
+    const results = []
+    const xResults = updateCoordinate(xs)
+    const yResults = updateCoordinate(ys)
+    const x = arguments[0]
+    const y = arguments[1]
+    results.push(x, y)
+    let lastX = x, lastY = y
+    for (let i = 0; i < arguments.length - 1; i += 2)
+    {
+        const index = i / 2
+        const x2 = arguments[i + 2]
+        const y2 = arguments[i + 3]
+        results.push(...bezierCurveTo(lastX, lastY, xResults[0][index], yResults[0][index], xResults[1][index], yResults[1][index], x2, y2))
+        lastX = x2
+        lastY = y2
+    }
+    return results
+}
+
 module.exports = {
     arc,
     rect,
@@ -199,6 +306,7 @@ module.exports = {
     line,
     circle,
     bezierCurveTo,
+    bezierCurveThrough,
     get pointsInArc()
     {
         return _pointsInArc

@@ -1,9 +1,9 @@
 # shape-points
-Generate coordinates for simple geometric shapes, such as arcs, rectangles, rounded rectangles, bezier curves
+Generate coordinates for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)
 
 ## rationale
 
-I needed to find the points of a rounded rectangle.
+I needed to find the points of a rounded rectangle. Then I had fun adding lots of other shapes and curves.
 
 ## installation
 
@@ -90,8 +90,23 @@ function circle(x, y, radius)
  * @param {number} cp2y - second control point
  * @param {number} x2 - ending point
  * @param {number} y2 - ending point
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
+
+/**
+ * Calculate bezier curve(s) that pass through a series of points
+ * based on https://www.particleincell.com/2012/bezier-splines/
+ * @param {number} x1 - starting point
+ * @param {number} y1
+ * @param {number} [x2]
+ * @param {number} [y2]
+ * ...
+ * @param {number} xn - ending point
+ * @param {number} yn
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function bezierCurveThrough()
 ```
 ## License  
 MIT License  

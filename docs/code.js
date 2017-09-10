@@ -27,6 +27,9 @@ function test()
 
     control(250, 250, 300, 250, 250, 200, 330, 190)
     draw(ShapePoints.bezierCurveTo(250, 250, 250, 200, 330, 190, 300, 250), true)
+
+    control(380, 250, 425, 320, 450, 200, 500, 240)
+    draw(ShapePoints.bezierCurveThrough(380, 250, 425, 320, 450, 200, 500, 240), true)
 }
 
 function control()

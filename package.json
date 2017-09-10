@@ -1,40 +1,40 @@
 {
-  "name": "shape-points",
-  "version": "1.4.1",
-  "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
-  "scripts": {
-    "test": "budo --dir docs docs/code.js:index.js --live",
-    "build": "browserify docs/code.js -o docs/index.js",
-    "docs": "markdown-api index.js README.md",
-    "prepublishOnly": "npm run build && npm run docs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/davidfig/shape-points.git"
-  },
-  "keywords": [
-    "coordinates",
-    "shapes",
-    "geometry",
-    "points",
-    "rounded rectangle",
-    "line",
-    "arc",
-    "circle",
-    "bezier",
-    "bezierCurveTo"
-  ],
-  "author": "David Figatner",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/davidfig/shape-points/issues"
-  },
-  "homepage": "https://github.com/davidfig/shape-points#readme",
-  "dependencies": {
-    "highlight.js": "^9.12.0"
-  }
+    "name": "shape-points",
+    "version": "1.5.0",
+    "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
+    "main": "index.js",
+    "directories": {
+        "doc": "docs"
+    },
+    "scripts": {
+        "test": "budo --dir docs docs/code.js:index.js --live",
+        "build": "browserify docs/code.js -o docs/index.js",
+        "docs": "markdown-api index.js README.md",
+        "prepublishOnly": "npm run build && npm run docs"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/davidfig/shape-points.git"
+    },
+    "keywords": [
+        "coordinates",
+        "shapes",
+        "geometry",
+        "points",
+        "rounded rectangle",
+        "line",
+        "arc",
+        "circle",
+        "bezier",
+        "bezierCurveTo"
+    ],
+    "author": "David Figatner",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/davidfig/shape-points/issues"
+    },
+    "homepage": "https://github.com/davidfig/shape-points#readme",
+    "dependencies": {
+        "highlight.js": "^9.12.0"
+    }
 }
