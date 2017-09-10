@@ -107,7 +107,7 @@ const Angle = require('yy-angle')
 let _pointsInArc = 5
 
 /**
- * points in rectangle
+ * calculate points for rectangle
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -125,7 +125,7 @@ function rect(x, y, width, height)
 }
 
 /**
- * points in arc
+ * calculate points for arc
  * @param {number} x
  * @param {number} y
  * @param {number} start angle (radians)
@@ -146,49 +146,8 @@ function arc(x, y, start, end, radius)
     return points
 }
 
-function roundedRectEach(x, y, width, height, radii)
-{
-    radii.topLeft = radii.topLeft || 0
-    radii.topRight = radii.topRight || 0
-    radii.bottomLeft = radii.bottomLeft || 0
-    radii.bottomRight = radii.bottomRight || 0
-    const points = [
-        x - width / 2 + radii.topLeft, y - height / 2,
-        x + width / 2 - radii.topRight, y - height / 2
-    ]
-    if (radii.topRight)
-    {
-        points.push(...arc(x + width / 2 - radii.topRight, y - height / 2 + radii.topRight, 3 * Math.PI / 2, 0, radii.topRight))
-    }
-    points.push(
-        x + width / 2, y - height / 2 + radii.topRight,
-        x + width / 2, y + height / 2 - radii.bottomRight
-    )
-    if (radii.bottomRight)
-    {
-        points.push(...arc(x + width / 2 - radii.bottomRight, y + height / 2 - radii.bottomRight, 0, Math.PI / 2, radii.bottomRight))
-    }
-    points.push(
-        x + width / 2 - radii.bottomRight, y + height / 2,
-        x - width / 2 + radii.bottomLeft, y + height / 2
-    )
-    if (radii.bottomLeft)
-    {
-        points.push(...arc(x - width / 2 + radii.bottomLeft, y + height / 2 - radii.bottomLeft, Math.PI / 2, Math.PI, radii.bottomLeft))
-    }
-    points.push(
-        x - width / 2, y + height / 2 - radii.bottomLeft,
-        x - width / 2, y - height / 2 + radii.topLeft
-    )
-    if (radii.topLeft)
-    {
-        points.push(...arc(x - width / 2 + radii.topLeft, y - height / 2 + radii.topLeft, Math.PI, 3 * Math.PI / 2, radii.topLeft))
-    }
-    return points
-}
-
 /**
- * rounded rectangle
+ * calculate points for a rounded rectangle with one corner radius, or 4 separate corner radii
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -204,7 +163,43 @@ function roundedRect(x, y, width, height, radius)
 {
     if (isNaN(radius))
     {
-        return roundedRectEach(x, y, width, height, radius)
+        radius.topLeft = radius.topLeft || 0
+        radius.topRight = radius.topRight || 0
+        radius.bottomLeft = radius.bottomLeft || 0
+        radius.bottomRight = radius.bottomRight || 0
+        const points = [
+            x - width / 2 + radius.topLeft, y - height / 2,
+            x + width / 2 - radius.topRight, y - height / 2
+        ]
+        if (radius.topRight)
+        {
+            points.push(...arc(x + width / 2 - radius.topRight, y - height / 2 + radius.topRight, 3 * Math.PI / 2, 0, radius.topRight))
+        }
+        points.push(
+            x + width / 2, y - height / 2 + radius.topRight,
+            x + width / 2, y + height / 2 - radius.bottomRight
+        )
+        if (radius.bottomRight)
+        {
+            points.push(...arc(x + width / 2 - radius.bottomRight, y + height / 2 - radius.bottomRight, 0, Math.PI / 2, radius.bottomRight))
+        }
+        points.push(
+            x + width / 2 - radius.bottomRight, y + height / 2,
+            x - width / 2 + radius.bottomLeft, y + height / 2
+        )
+        if (radius.bottomLeft)
+        {
+            points.push(...arc(x - width / 2 + radius.bottomLeft, y + height / 2 - radius.bottomLeft, Math.PI / 2, Math.PI, radius.bottomLeft))
+        }
+        points.push(
+            x - width / 2, y + height / 2 - radius.bottomLeft,
+            x - width / 2, y - height / 2 + radius.topLeft
+        )
+        if (radius.topLeft)
+        {
+            points.push(...arc(x - width / 2 + radius.topLeft, y - height / 2 + radius.topLeft, Math.PI, 3 * Math.PI / 2, radius.topLeft))
+        }
+        return points
     }
     return [
         x - width / 2 + radius, y - height / 2,
@@ -223,7 +218,7 @@ function roundedRect(x, y, width, height, radius)
 }
 
 /**
- * line with thickness
+ * calculate points for a line with a certain thickness (either one thickness or a starting and ending thickness)
  * @param {number} x1
  * @param {number} y1
  * @param {number} x2
@@ -248,7 +243,7 @@ function line(x1, y1, x2, y2, thickness)
 }
 
 /**
- * circle
+ * calculate points for a circle (calculates using pointsInArc * 4)
  * @param {number} x
  * @param {number} y
  * @param {number} radius
@@ -266,7 +261,7 @@ function circle(x, y, radius)
 }
 
 /**
- * Calculate points for a bezier curve
+ * Calculate points for a bezier curve with a starting point and two control points
  * from https://stackoverflow.com/a/15399173/1955997
  * @param {number} x1 - starting point (usually a moveTo)
  * @param {number} y1 - starting point
@@ -299,7 +294,7 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 
 
 /**
- * Calculate bezier curve(s) that pass through a series of points
+ * Calculate points for smooth bezier curves passing through a series of points
  * based on https://www.particleincell.com/2012/bezier-splines/
  * @param {number} x1 - starting point
  * @param {number} y1

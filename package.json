@@ -1,6 +1,6 @@
 {
     "name": "shape-points",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
     "main": "index.js",
     "directories": {
