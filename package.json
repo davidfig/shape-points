@@ -1,7 +1,7 @@
 {
     "name": "shape-points",
     "version": "1.5.1",
-    "description": "Generate coordinates for various shapes: arc, rect, roundedRect, line (with thickness)",
+    "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "index.js",
     "directories": {
         "doc": "docs"

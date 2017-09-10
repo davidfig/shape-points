@@ -1,5 +1,5 @@
 # shape-points
-Generate coordinates for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)
+Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)
 
 ## rationale
 
