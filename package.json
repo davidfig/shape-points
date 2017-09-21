@@ -1,7 +1,7 @@
 {
     "name": "shape-points",
-    "version": "1.6.0",
-    "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
+    "version": "1.6.1",
+    "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "index.js",
     "directories": {
         "doc": "docs"
@@ -9,7 +9,7 @@
     "scripts": {
         "test": "budo --dir docs docs/code.js:index.js --live",
         "build": "browserify docs/code.js -o docs/index.js",
-        "docs": "markdown-api index.js README.md",
+        "docs": "markdown-api README.md index.js",
         "prepublishOnly": "npm run build && npm run docs"
     },
     "repository": {
@@ -25,6 +25,7 @@
         "line",
         "arc",
         "circle",
+        "ellipse",
         "bezier",
         "bezierCurveTo"
     ],

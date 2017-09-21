@@ -1,5 +1,5 @@
 # shape-points
-Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)
+Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)
 
 ## rationale
 
@@ -78,6 +78,16 @@ function line(x1, y1, x2, y2, thickness)
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function circle(x, y, radius)
+
+/**
+ * calculate points for a ellipse (calculates using pointsInArc * 4)
+ * @param {number} x
+ * @param {number} y
+ * @param {number} rx
+ * @param {number} ry
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function ellipse(x, y, rx, ry)
 
 /**
  * Calculate points for a bezier curve with a starting point and two control points
