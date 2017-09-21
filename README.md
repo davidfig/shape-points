@@ -16,6 +16,14 @@ I needed to find the points of a rounded rectangle. Then I had fun adding lots o
     
     const points = ShapePoints.roundedRect(125, 100, 200, 100, 30)
 
+    // assuming a canvas context was set up
+    context.moveTo(points[0], points[1])
+    for (let i = 2; i < points.length; i += 2)
+    {
+        context.lineTo(points[i], points[i + 1])
+    }
+    context.stroke()
+
 ## live example
 https://davidfig.github.io/shape-points/
 
