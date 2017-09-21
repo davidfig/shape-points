@@ -81,5 +81,6 @@ window.onload = function ()
     c = canvas.getContext('2d')
 
     test()
+    require('fork-me-github')('https://github.com/davidfig/shape-points')
     require('./highlight')()
 }

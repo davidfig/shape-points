@@ -149,7 +149,7 @@ function circle(x, y, radius)
 {
     const points = []
     const interval = Math.PI * 2 / (_pointsInArc * 4)
-    for (let i = 0; i < _pointsInArc * 4 - interval * 2; i += interval)
+    for (let i = 0; i < Math.PI * 2; i += interval)
     {
         points.push(x + Math.cos(i) * radius, y + Math.sin(i) * radius)
     }
