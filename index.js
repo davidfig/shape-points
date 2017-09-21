@@ -157,6 +157,25 @@ function circle(x, y, radius)
 }
 
 /**
+ * calculate points for a ellipse (calculates using pointsInArc * 4)
+ * @param {number} x
+ * @param {number} y
+ * @param {number} rx
+ * @param {number} ry
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+function ellipse(x, y, rx, ry)
+{
+    const points = []
+    const interval = Math.PI * 2 / (_pointsInArc * 4)
+    for (let i = 0; i < Math.PI * 2; i += interval)
+    {
+        points.push(x - rx * Math.sin(i), y - ry * Math.cos(i))
+    }
+    return points
+}
+
+/**
  * Calculate points for a bezier curve with a starting point and two control points
  * from https://stackoverflow.com/a/15399173/1955997
  * @param {number} x1 - starting point (usually a moveTo)
@@ -300,6 +319,7 @@ module.exports = {
     roundedRect,
     line,
     circle,
+    ellipse,
     bezierCurveTo,
     bezierCurveThrough,
     get pointsInArc()

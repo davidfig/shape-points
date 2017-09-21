@@ -30,6 +30,9 @@ function test()
 
     control(380, 250, 425, 320, 450, 200, 500, 240)
     draw(ShapePoints.bezierCurveThrough(380, 250, 425, 320, 450, 200, 500, 240), true)
+
+    control(600, 250, 600 + 50, 250, 600, 250 + 75)
+    draw(ShapePoints.ellipse(600, 250, 50, 75))
 }
 
 function control()
