@@ -28,7 +28,7 @@ I needed to find the points of a rounded rectangle. Then I had fun adding lots o
 https://davidfig.github.io/shape-points/
 
 ## API
-```
+```js
 /**
  * calculate points for rectangle
  * @param {number} x
@@ -125,6 +125,7 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveThrough()
+
 ```
 ## License  
 MIT License  

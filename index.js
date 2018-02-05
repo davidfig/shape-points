@@ -262,17 +262,29 @@ function bezierCurveThrough()
             b[i] -= m * c[i - 1]
             r[i] -= m * r[i - 1]
         }
-
         p1[n - 1] = r[n - 1] / b[n - 1]
         for (let i = n - 2; i >= 0; --i)
+        {
             p1[i] = (r[i] - c[i] * p1[i + 1]) / b[i]
-
+        }
         /* we have p1, now compute p2 */
         for (let i = 0; i < n - 1; i++)
             p2[i] = 2 * K[i + 1] - p1[i + 1]
 
         p2[n - 1] = 0.5 * (K[n] + p1[n - 1])
         return [p1, p2]
+    }
+
+    // two points creates a line
+    if (arguments.length === 4)
+    {
+        return [arguments[0], arguments[1], arguments[2], arguments[3]]
+    }
+
+    // not enough points
+    if (arguments.length < 4)
+    {
+        return
     }
 
     const xs = [], ys = []
@@ -282,26 +294,11 @@ function bezierCurveThrough()
         ys.push(arguments[i + 1])
     }
 
-    // not enough points
-    if (arguments.length <= 4)
-    {
-        return
-    }
-
-    // two points creates a line
-    if (arguments.length === 4)
-    {
-        return [arguments[0], arguments[1], arguments[2], arguments[3]]
-    }
-
     const results = []
     const xResults = updateCoordinate(xs)
     const yResults = updateCoordinate(ys)
-    const x = arguments[0]
-    const y = arguments[1]
-    results.push(x, y)
-    let lastX = x, lastY = y
-    for (let i = 0; i < arguments.length - 1; i += 2)
+    let lastX = arguments[0], lastY = arguments[1]
+    for (let i = 0; i < arguments.length - 2; i += 2)
     {
         const index = i / 2
         const x2 = arguments[i + 2]
