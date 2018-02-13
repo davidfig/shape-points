@@ -1,7 +1,8 @@
 const Angle = require('yy-angle')
+const Curve = require('fit-curve')
 
 let _pointsInArc = 5
-
+let _curveError = 50
 /**
  * calculate points for rectangle
  * @param {number} x
@@ -210,7 +211,8 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 
 /**
  * Calculate points for smooth bezier curves passing through a series of points
- * based on https://www.particleincell.com/2012/bezier-splines/
+ * uses https://github.com/soswow/fit-curve/blob/master/src/fit-curve.js
+ * uses ShapePoints.curveError=50 for error value
  * @param {(number|number[])} x1 - starting point or array of points [x1, y1, x2, y2, ... xn, yn]
  * @param {number} [y1]
  * @param {number} [x2]
@@ -222,72 +224,20 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
  */
 function bezierCurveThrough()
 {
-    function updateCoordinate(K)
-    {
-        const p1 = []
-        const p2 = []
-        let n = K.length - 1
-
-        /* rhs vector */
-        const a = []
-        const b = []
-        const c = []
-        const r = []
-
-        /* left most segment */
-        a[0] = 0
-        b[0] = 2
-        c[0] = 1
-        r[0] = K[0] + 2 * K[1]
-
-        /* internal segments */
-        for (let i = 1; i < n - 1; i++)
-        {
-            a[i] = 1
-            b[i] = 4
-            c[i] = 1
-            r[i] = 4 * K[i] + 2 * K[i + 1]
-        }
-
-        /* right segment */
-        a[n - 1] = 2
-        b[n - 1] = 7
-        c[n - 1] = 0
-        r[n - 1] = 8 * K[n - 1] + K[n]
-
-        /* solves Ax=b with the Thomas algorithm (from Wikipedia) */
-        for (let i = 1; i < n; i++)
-        {
-            const m = a[i] / b[i - 1]
-            b[i] -= m * c[i - 1]
-            r[i] -= m * r[i - 1]
-        }
-        p1[n - 1] = r[n - 1] / b[n - 1]
-        for (let i = n - 2; i >= 0; --i)
-        {
-            p1[i] = (r[i] - c[i] * p1[i + 1]) / b[i]
-        }
-        /* we have p1, now compute p2 */
-        for (let i = 0; i < n - 1; i++)
-            p2[i] = 2 * K[i + 1] - p1[i + 1]
-
-        p2[n - 1] = 0.5 * (K[n] + p1[n - 1])
-        return [p1, p2]
-    }
-
     const points = []
     if (Array.isArray(arguments[0]))
     {
-        for (let point of arguments[0])
+        const array = arguments[0]
+        for (let i = 0; i < array.length; i += 2)
         {
-            points.push(point)
+            points.push([array[i], array[i + 1]])
         }
     }
     else
     {
-        for (let i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i += 2)
         {
-            points.push(arguments[i])
+            points.push([arguments[i], arguments[i + 1]])
         }
     }
 
@@ -303,25 +253,12 @@ function bezierCurveThrough()
         return
     }
 
-    const xs = [], ys = []
-    for (let i = 0; i < points.length; i += 2)
-    {
-        xs.push(points[i])
-        ys.push(points[i + 1])
-    }
-
     const results = []
-    const xResults = updateCoordinate(xs)
-    const yResults = updateCoordinate(ys)
-    let lastX = points[0], lastY = points[1]
-    for (let i = 0; i < points.length - 2; i += 2)
+    const curves = Curve(points, _curveError)
+    for (let i = 0; i < curves.length; i++)
     {
-        const index = i / 2
-        const x2 = points[i + 2]
-        const y2 = points[i + 3]
-        results.push(...bezierCurveTo(lastX, lastY, xResults[0][index], yResults[0][index], xResults[1][index], yResults[1][index], x2, y2))
-        lastX = x2
-        lastY = y2
+        const c = curves[i]
+        results.push(...bezierCurveTo(c[0][0], c[0][1], c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1]))
     }
     return results
 }
@@ -342,5 +279,14 @@ module.exports = {
     set pointsInArc(value)
     {
         _pointsInArc = value
+    },
+    get curveError()
+    {
+        return _curveError
+    },
+    set curveError(value)
+    {
+        _curveError = value
     }
+
 }

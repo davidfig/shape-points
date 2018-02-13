@@ -1,6 +1,6 @@
 {
     "name": "shape-points",
-    "version": "1.6.3",
+    "version": "1.7.0",
     "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "index.js",
     "directories": {
@@ -38,5 +38,8 @@
     "devDependencies": {
         "fork-me-github": "^1.0.2",
         "highlight.js": "^9.12.0"
+    },
+    "dependencies": {
+        "fit-curve": "^0.1.6"
     }
 }

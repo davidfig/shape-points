@@ -1,5 +1,4 @@
 const ShapePoints = require('..')
-
 let c
 
 function test()
@@ -36,8 +35,8 @@ function test()
 
     let i = 200
 
-    control(0 + i, 0 + i, 209 + i, -36 + i, 320 + i, -103 + i, 1500 + i, 0+i)
-    draw(ShapePoints.bezierCurveThrough(0 + i, 0 + i, 209 + i, -36 + i, 320 + i, -103 + i, 1500 + i, 0 + i))
+    control(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 +i, 1500 + i, 0+i)
+    draw(ShapePoints.bezierCurveThrough(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 + i, 1500 + i, 0 + i))
 }
 
 function control()
