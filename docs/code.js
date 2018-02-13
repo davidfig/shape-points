@@ -33,6 +33,11 @@ function test()
 
     control(600, 250, 600 + 50, 250, 600, 250 + 75)
     draw(ShapePoints.ellipse(600, 250, 50, 75))
+
+    let i = 200
+
+    control(0 + i, 0 + i, 209 + i, -36 + i, 320 + i, -103 + i, 1500 + i, 0+i)
+    draw(ShapePoints.bezierCurveThrough(0 + i, 0 + i, 209 + i, -36 + i, 320 + i, -103 + i, 1500 + i, 0 + i))
 }
 
 function control()

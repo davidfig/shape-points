@@ -211,14 +211,14 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 /**
  * Calculate points for smooth bezier curves passing through a series of points
  * based on https://www.particleincell.com/2012/bezier-splines/
- * @param {number} x1 - starting point
- * @param {number} y1
+ * @param {(number|number[])} x1 - starting point or array of points [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [y1]
  * @param {number} [x2]
  * @param {number} [y2]
  * ...
- * @param {number} xn - ending point
- * @param {number} yn
- * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [xn] - ending point
+ * @param {number} [yn]
+ * @returns {number[]} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveThrough()
 {
@@ -275,34 +275,50 @@ function bezierCurveThrough()
         return [p1, p2]
     }
 
-    // two points creates a line
-    if (arguments.length === 4)
+    const points = []
+    if (Array.isArray(arguments[0]))
     {
-        return [arguments[0], arguments[1], arguments[2], arguments[3]]
+        for (let point of arguments[0])
+        {
+            points.push(point)
+        }
+    }
+    else
+    {
+        for (let i = 0; i < arguments.length; i++)
+        {
+            points.push(arguments[i])
+        }
+    }
+
+    // two points creates a line
+    if (points.length === 4)
+    {
+        return [points[0], points[1], points[2], points[3]]
     }
 
     // not enough points
-    if (arguments.length < 4)
+    if (points.length < 4)
     {
         return
     }
 
     const xs = [], ys = []
-    for (let i = 0; i < arguments.length; i += 2)
+    for (let i = 0; i < points.length; i += 2)
     {
-        xs.push(arguments[i])
-        ys.push(arguments[i + 1])
+        xs.push(points[i])
+        ys.push(points[i + 1])
     }
 
     const results = []
     const xResults = updateCoordinate(xs)
     const yResults = updateCoordinate(ys)
-    let lastX = arguments[0], lastY = arguments[1]
-    for (let i = 0; i < arguments.length - 2; i += 2)
+    let lastX = points[0], lastY = points[1]
+    for (let i = 0; i < points.length - 2; i += 2)
     {
         const index = i / 2
-        const x2 = arguments[i + 2]
-        const y2 = arguments[i + 3]
+        const x2 = points[i + 2]
+        const y2 = points[i + 3]
         results.push(...bezierCurveTo(lastX, lastY, xResults[0][index], yResults[0][index], xResults[1][index], yResults[1][index], x2, y2))
         lastX = x2
         lastY = y2
