@@ -1,6 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 const ShapePoints = require('..')
-
 let c
 
 function test()
@@ -34,6 +33,11 @@ function test()
 
     control(600, 250, 600 + 50, 250, 600, 250 + 75)
     draw(ShapePoints.ellipse(600, 250, 50, 75))
+
+    let i = 200
+
+    control(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 +i, 1500 + i, 0+i)
+    draw(ShapePoints.bezierCurveThrough(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 + i, 1500 + i, 0 + i))
 }
 
 function control()
@@ -88,7 +92,7 @@ window.onload = function ()
     require('fork-me-github')('https://github.com/davidfig/shape-points')
     require('./highlight')()
 }
-},{"..":3,"./highlight":2,"fork-me-github":4}],2:[function(require,module,exports){
+},{"..":3,"./highlight":2,"fork-me-github":5}],2:[function(require,module,exports){
 // shows the code in the demo
 module.exports = function highlight()
 {
@@ -105,11 +109,12 @@ module.exports = function highlight()
 
 // for eslint
 /* globals window, XMLHttpRequest, document */
-},{"highlight.js":6}],3:[function(require,module,exports){
+},{"highlight.js":7}],3:[function(require,module,exports){
 const Angle = require('yy-angle')
+const Curve = require('fit-curve')
 
 let _pointsInArc = 5
-
+let _curveError = 50
 /**
  * calculate points for rectangle
  * @param {number} x
@@ -318,102 +323,54 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 
 /**
  * Calculate points for smooth bezier curves passing through a series of points
- * based on https://www.particleincell.com/2012/bezier-splines/
- * @param {number} x1 - starting point
- * @param {number} y1
+ * uses https://github.com/soswow/fit-curve/blob/master/src/fit-curve.js
+ * uses ShapePoints.curveError=50 for error value
+ * @param {(number|number[])} x1 - starting point or array of points [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [y1]
  * @param {number} [x2]
  * @param {number} [y2]
  * ...
- * @param {number} xn - ending point
- * @param {number} yn
- * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [xn] - ending point
+ * @param {number} [yn]
+ * @returns {number[]} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveThrough()
 {
-    function updateCoordinate(K)
+    const points = []
+    if (Array.isArray(arguments[0]))
     {
-        const p1 = []
-        const p2 = []
-        let n = K.length - 1
-
-        /* rhs vector */
-        const a = []
-        const b = []
-        const c = []
-        const r = []
-
-        /* left most segment */
-        a[0] = 0
-        b[0] = 2
-        c[0] = 1
-        r[0] = K[0] + 2 * K[1]
-
-        /* internal segments */
-        for (let i = 1; i < n - 1; i++)
+        const array = arguments[0]
+        for (let i = 0; i < array.length; i += 2)
         {
-            a[i] = 1
-            b[i] = 4
-            c[i] = 1
-            r[i] = 4 * K[i] + 2 * K[i + 1]
+            points.push([array[i], array[i + 1]])
         }
-
-        /* right segment */
-        a[n - 1] = 2
-        b[n - 1] = 7
-        c[n - 1] = 0
-        r[n - 1] = 8 * K[n - 1] + K[n]
-
-        /* solves Ax=b with the Thomas algorithm (from Wikipedia) */
-        for (let i = 1; i < n; i++)
+    }
+    else
+    {
+        for (let i = 0; i < arguments.length; i += 2)
         {
-            const m = a[i] / b[i - 1]
-            b[i] -= m * c[i - 1]
-            r[i] -= m * r[i - 1]
+            points.push([arguments[i], arguments[i + 1]])
         }
-        p1[n - 1] = r[n - 1] / b[n - 1]
-        for (let i = n - 2; i >= 0; --i)
-        {
-            p1[i] = (r[i] - c[i] * p1[i + 1]) / b[i]
-        }
-        /* we have p1, now compute p2 */
-        for (let i = 0; i < n - 1; i++)
-            p2[i] = 2 * K[i + 1] - p1[i + 1]
-
-        p2[n - 1] = 0.5 * (K[n] + p1[n - 1])
-        return [p1, p2]
     }
 
     // two points creates a line
-    if (arguments.length === 4)
+    if (points.length === 4)
     {
-        return [arguments[0], arguments[1], arguments[2], arguments[3]]
+        return [points[0], points[1], points[2], points[3]]
     }
 
     // not enough points
-    if (arguments.length < 4)
+    if (points.length < 4)
     {
         return
     }
 
-    const xs = [], ys = []
-    for (let i = 0; i < arguments.length; i += 2)
-    {
-        xs.push(arguments[i])
-        ys.push(arguments[i + 1])
-    }
-
     const results = []
-    const xResults = updateCoordinate(xs)
-    const yResults = updateCoordinate(ys)
-    let lastX = arguments[0], lastY = arguments[1]
-    for (let i = 0; i < arguments.length - 2; i += 2)
+    const curves = Curve(points, _curveError)
+    for (let i = 0; i < curves.length; i++)
     {
-        const index = i / 2
-        const x2 = arguments[i + 2]
-        const y2 = arguments[i + 3]
-        results.push(...bezierCurveTo(lastX, lastY, xResults[0][index], yResults[0][index], xResults[1][index], yResults[1][index], x2, y2))
-        lastX = x2
-        lastY = y2
+        const c = curves[i]
+        results.push(...bezierCurveTo(c[0][0], c[0][1], c[1][0], c[1][1], c[2][0], c[2][1], c[3][0], c[3][1]))
     }
     return results
 }
@@ -434,10 +391,646 @@ module.exports = {
     set pointsInArc(value)
     {
         _pointsInArc = value
+    },
+    get curveError()
+    {
+        return _curveError
+    },
+    set curveError(value)
+    {
+        _curveError = value
     }
+
 }
 
-},{"yy-angle":183}],4:[function(require,module,exports){
+},{"fit-curve":4,"yy-angle":184}],4:[function(require,module,exports){
+(function (global, factory) {
+    if (typeof define === "function" && define.amd) {
+        define(['module'], factory);
+    } else if (typeof exports !== "undefined") {
+        factory(module);
+    } else {
+        var mod = {
+            exports: {}
+        };
+        factory(mod);
+        global.fitCurve = mod.exports;
+    }
+})(this, function (module) {
+    'use strict';
+
+    function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+            throw new TypeError("Cannot call a class as a function");
+        }
+    }
+
+    // ==ClosureCompiler==
+    // @output_file_name fit-curve.min.js
+    // @compilation_level SIMPLE_OPTIMIZATIONS
+    // ==/ClosureCompiler==
+
+    /**
+     *  @preserve  JavaScript implementation of
+     *  Algorithm for Automatically Fitting Digitized Curves
+     *  by Philip J. Schneider
+     *  "Graphics Gems", Academic Press, 1990
+     *
+     *  The MIT License (MIT)
+     *
+     *  https://github.com/soswow/fit-curves
+     */
+
+    /**
+     * Fit one or more Bezier curves to a set of points.
+     *
+     * @param {Array<Array<Number>>} points - Array of digitized points, e.g. [[5,5],[5,50],[110,140],[210,160],[320,110]]
+     * @param {Number} maxError - Tolerance, squared error between points and fitted curve
+     * @returns {Array<Array<Array<Number>>>} Array of Bezier curves, where each element is [first-point, control-point-1, control-point-2, second-point] and points are [x, y]
+     */
+    function fitCurve(points, maxError, progressCallback) {
+        if (!Array.isArray(points)) {
+            throw new TypeError("First argument should be an array");
+        }
+        points.forEach(function (point) {
+            if (!Array.isArray(point) || point.length !== 2 || typeof point[0] !== 'number' || typeof point[1] !== 'number') {
+                throw Error("Each point should be an array of two numbers");
+            }
+        });
+        // Remove duplicate points
+        points = points.filter(function (point, i) {
+            return i === 0 || !(point[0] === points[i - 1][0] && point[1] === points[i - 1][1]);
+        });
+
+        if (points.length < 2) {
+            return [];
+        }
+
+        var len = points.length;
+        var leftTangent = createTangent(points[1], points[0]);
+        var rightTangent = createTangent(points[len - 2], points[len - 1]);
+
+        return fitCubic(points, leftTangent, rightTangent, maxError, progressCallback);
+    }
+
+    /**
+     * Fit a Bezier curve to a (sub)set of digitized points.
+     * Your code should not call this function directly. Use {@link fitCurve} instead.
+     *
+     * @param {Array<Array<Number>>} points - Array of digitized points, e.g. [[5,5],[5,50],[110,140],[210,160],[320,110]]
+     * @param {Array<Number>} leftTangent - Unit tangent vector at start point
+     * @param {Array<Number>} rightTangent - Unit tangent vector at end point
+     * @param {Number} error - Tolerance, squared error between points and fitted curve
+     * @returns {Array<Array<Array<Number>>>} Array of Bezier curves, where each element is [first-point, control-point-1, control-point-2, second-point] and points are [x, y]
+     */
+    function fitCubic(points, leftTangent, rightTangent, error, progressCallback) {
+        var MaxIterations = 20; //Max times to try iterating (to find an acceptable curve)
+
+        var bezCurve, //Control points of fitted Bezier curve
+        u, //Parameter values for point
+        uPrime, //Improved parameter values
+        maxError, prevErr, //Maximum fitting error
+        splitPoint, prevSplit, //Point to split point set at if we need more than one curve
+        centerVector, toCenterTangent, fromCenterTangent, //Unit tangent vector(s) at splitPoint
+        beziers, //Array of fitted Bezier curves if we need more than one curve
+        dist, i;
+
+        //console.log('fitCubic, ', points.length);
+
+        //Use heuristic if region only has two points in it
+        if (points.length === 2) {
+            dist = maths.vectorLen(maths.subtract(points[0], points[1])) / 3.0;
+            bezCurve = [points[0], maths.addArrays(points[0], maths.mulItems(leftTangent, dist)), maths.addArrays(points[1], maths.mulItems(rightTangent, dist)), points[1]];
+            return [bezCurve];
+        }
+
+        //Parameterize points, and attempt to fit curve
+        u = chordLengthParameterize(points);
+
+        var _generateAndReport = generateAndReport(points, u, u, leftTangent, rightTangent, progressCallback);
+
+        bezCurve = _generateAndReport[0];
+        maxError = _generateAndReport[1];
+        splitPoint = _generateAndReport[2];
+
+
+        if (maxError < error) {
+            return [bezCurve];
+        }
+        //If error not too large, try some reparameterization and iteration
+        if (maxError < error * error) {
+
+            uPrime = u;
+            prevErr = maxError;
+            prevSplit = splitPoint;
+
+            for (i = 0; i < MaxIterations; i++) {
+
+                uPrime = reparameterize(bezCurve, points, uPrime);
+
+                var _generateAndReport2 = generateAndReport(points, u, uPrime, leftTangent, rightTangent, progressCallback);
+
+                bezCurve = _generateAndReport2[0];
+                maxError = _generateAndReport2[1];
+                splitPoint = _generateAndReport2[2];
+
+
+                if (maxError < error) {
+                    return [bezCurve];
+                }
+                //If the development of the fitted curve grinds to a halt,
+                //we abort this attempt (and try a shorter curve):
+                else if (splitPoint === prevSplit) {
+                        var errChange = maxError / prevErr;
+                        if (errChange > .9999 && errChange < 1.0001) {
+                            break;
+                        }
+                    }
+
+                prevErr = maxError;
+                prevSplit = splitPoint;
+            }
+        }
+
+        //Fitting failed -- split at max error point and fit recursively
+        beziers = [];
+
+        //To create a smooth transition from one curve segment to the next,
+        //we calculate the tangent of the points directly before and after the center,
+        //and use that same tangent both to and from the center point.
+        centerVector = maths.subtract(points[splitPoint - 1], points[splitPoint + 1]);
+        //However, should those two points be equal, the normal tangent calculation will fail.
+        //Instead, we calculate the tangent from that "double-point" to the center point, and rotate 90deg.
+        if (centerVector[0] === 0 && centerVector[1] === 0) {
+            //toCenterTangent = createTangent(points[splitPoint - 1], points[splitPoint]);
+            //fromCenterTangent = createTangent(points[splitPoint + 1], points[splitPoint]);
+
+            //[x,y] -> [-y,x]: http://stackoverflow.com/a/4780141/1869660
+            centerVector = maths.subtract(points[splitPoint - 1], points[splitPoint]).reverse();
+            centerVector[0] = -centerVector[0];
+        }
+        toCenterTangent = maths.normalize(centerVector);
+        //To and from need to point in opposite directions:
+        fromCenterTangent = maths.mulItems(toCenterTangent, -1);
+
+        /*
+        Note: An alternative to this "divide and conquer" recursion could be to always
+              let new curve segments start by trying to go all the way to the end,
+              instead of only to the end of the current subdivided polyline.
+              That might let many segments fit a few points more, reducing the number of total segments.
+                However, a few tests have shown that the segment reduction is insignificant
+              (240 pts, 100 err: 25 curves vs 27 curves. 140 pts, 100 err: 17 curves on both),
+              and the results take twice as many steps and milliseconds to finish,
+              without looking any better than what we already have.
+        */
+        beziers = beziers.concat(fitCubic(points.slice(0, splitPoint + 1), leftTangent, toCenterTangent, error, progressCallback));
+        beziers = beziers.concat(fitCubic(points.slice(splitPoint), fromCenterTangent, rightTangent, error, progressCallback));
+        return beziers;
+    };
+
+    function generateAndReport(points, paramsOrig, paramsPrime, leftTangent, rightTangent, progressCallback) {
+        var bezCurve, maxError, splitPoint;
+
+        bezCurve = generateBezier(points, paramsPrime, leftTangent, rightTangent, progressCallback);
+        //Find max deviation of points to fitted curve.
+        //Here we always use the original parameters (from chordLengthParameterize()),
+        //because we need to compare the current curve to the actual source polyline,
+        //and not the currently iterated parameters which reparameterize() & generateBezier() use,
+        //as those have probably drifted far away and may no longer be in ascending order.
+
+        var _computeMaxError = computeMaxError(points, bezCurve, paramsOrig);
+
+        maxError = _computeMaxError[0];
+        splitPoint = _computeMaxError[1];
+
+
+        if (progressCallback) {
+            progressCallback({
+                bez: bezCurve,
+                points: points,
+                params: paramsOrig,
+                maxErr: maxError,
+                maxPoint: splitPoint
+            });
+        }
+
+        return [bezCurve, maxError, splitPoint];
+    }
+
+    /**
+     * Use least-squares method to find Bezier control points for region.
+     *
+     * @param {Array<Array<Number>>} points - Array of digitized points
+     * @param {Array<Number>} parameters - Parameter values for region
+     * @param {Array<Number>} leftTangent - Unit tangent vector at start point
+     * @param {Array<Number>} rightTangent - Unit tangent vector at end point
+     * @returns {Array<Array<Number>>} Approximated Bezier curve: [first-point, control-point-1, control-point-2, second-point] where points are [x, y]
+     */
+    function generateBezier(points, parameters, leftTangent, rightTangent) {
+        var bezCurve,
+            //Bezier curve ctl pts
+        A,
+            a,
+            //Precomputed rhs for eqn
+        C,
+            X,
+            //Matrices C & X
+        det_C0_C1,
+            det_C0_X,
+            det_X_C1,
+            //Determinants of matrices
+        alpha_l,
+            alpha_r,
+            //Alpha values, left and right
+
+        epsilon,
+            segLength,
+            i,
+            len,
+            tmp,
+            u,
+            ux,
+            firstPoint = points[0],
+            lastPoint = points[points.length - 1];
+
+        bezCurve = [firstPoint, null, null, lastPoint];
+        //console.log('gb', parameters.length);
+
+        //Compute the A's
+        A = maths.zeros_Xx2x2(parameters.length);
+        for (i = 0, len = parameters.length; i < len; i++) {
+            u = parameters[i];
+            ux = 1 - u;
+            a = A[i];
+
+            a[0] = maths.mulItems(leftTangent, 3 * u * (ux * ux));
+            a[1] = maths.mulItems(rightTangent, 3 * ux * (u * u));
+        }
+
+        //Create the C and X matrices
+        C = [[0, 0], [0, 0]];
+        X = [0, 0];
+        for (i = 0, len = points.length; i < len; i++) {
+            u = parameters[i];
+            a = A[i];
+
+            C[0][0] += maths.dot(a[0], a[0]);
+            C[0][1] += maths.dot(a[0], a[1]);
+            C[1][0] += maths.dot(a[0], a[1]);
+            C[1][1] += maths.dot(a[1], a[1]);
+
+            tmp = maths.subtract(points[i], bezier.q([firstPoint, firstPoint, lastPoint, lastPoint], u));
+
+            X[0] += maths.dot(a[0], tmp);
+            X[1] += maths.dot(a[1], tmp);
+        }
+
+        //Compute the determinants of C and X
+        det_C0_C1 = C[0][0] * C[1][1] - C[1][0] * C[0][1];
+        det_C0_X = C[0][0] * X[1] - C[1][0] * X[0];
+        det_X_C1 = X[0] * C[1][1] - X[1] * C[0][1];
+
+        //Finally, derive alpha values
+        alpha_l = det_C0_C1 === 0 ? 0 : det_X_C1 / det_C0_C1;
+        alpha_r = det_C0_C1 === 0 ? 0 : det_C0_X / det_C0_C1;
+
+        //If alpha negative, use the Wu/Barsky heuristic (see text).
+        //If alpha is 0, you get coincident control points that lead to
+        //divide by zero in any subsequent NewtonRaphsonRootFind() call.
+        segLength = maths.vectorLen(maths.subtract(firstPoint, lastPoint));
+        epsilon = 1.0e-6 * segLength;
+        if (alpha_l < epsilon || alpha_r < epsilon) {
+            //Fall back on standard (probably inaccurate) formula, and subdivide further if needed.
+            bezCurve[1] = maths.addArrays(firstPoint, maths.mulItems(leftTangent, segLength / 3.0));
+            bezCurve[2] = maths.addArrays(lastPoint, maths.mulItems(rightTangent, segLength / 3.0));
+        } else {
+            //First and last control points of the Bezier curve are
+            //positioned exactly at the first and last data points
+            //Control points 1 and 2 are positioned an alpha distance out
+            //on the tangent vectors, left and right, respectively
+            bezCurve[1] = maths.addArrays(firstPoint, maths.mulItems(leftTangent, alpha_l));
+            bezCurve[2] = maths.addArrays(lastPoint, maths.mulItems(rightTangent, alpha_r));
+        }
+
+        return bezCurve;
+    };
+
+    /**
+     * Given set of points and their parameterization, try to find a better parameterization.
+     *
+     * @param {Array<Array<Number>>} bezier - Current fitted curve
+     * @param {Array<Array<Number>>} points - Array of digitized points
+     * @param {Array<Number>} parameters - Current parameter values
+     * @returns {Array<Number>} New parameter values
+     */
+    function reparameterize(bezier, points, parameters) {
+        /*
+        var j, len, point, results, u;
+        results = [];
+        for (j = 0, len = points.length; j < len; j++) {
+            point = points[j], u = parameters[j];
+              results.push(newtonRaphsonRootFind(bezier, point, u));
+        }
+        return results;
+        //*/
+        return parameters.map(function (p, i) {
+            return newtonRaphsonRootFind(bezier, points[i], p);
+        });
+    };
+
+    /**
+     * Use Newton-Raphson iteration to find better root.
+     *
+     * @param {Array<Array<Number>>} bez - Current fitted curve
+     * @param {Array<Number>} point - Digitized point
+     * @param {Number} u - Parameter value for "P"
+     * @returns {Number} New u
+     */
+    function newtonRaphsonRootFind(bez, point, u) {
+        /*
+            Newton's root finding algorithm calculates f(x)=0 by reiterating
+            x_n+1 = x_n - f(x_n)/f'(x_n)
+            We are trying to find curve parameter u for some point p that minimizes
+            the distance from that point to the curve. Distance point to curve is d=q(u)-p.
+            At minimum distance the point is perpendicular to the curve.
+            We are solving
+            f = q(u)-p * q'(u) = 0
+            with
+            f' = q'(u) * q'(u) + q(u)-p * q''(u)
+            gives
+            u_n+1 = u_n - |q(u_n)-p * q'(u_n)| / |q'(u_n)**2 + q(u_n)-p * q''(u_n)|
+        */
+
+        var d = maths.subtract(bezier.q(bez, u), point),
+            qprime = bezier.qprime(bez, u),
+            numerator = /*sum(*/maths.mulMatrix(d, qprime) /*)*/
+        ,
+            denominator = maths.sum(maths.addItems(maths.squareItems(qprime), maths.mulMatrix(d, bezier.qprimeprime(bez, u))));
+
+        if (denominator === 0) {
+            return u;
+        } else {
+            return u - numerator / denominator;
+        }
+    };
+
+    /**
+     * Assign parameter values to digitized points using relative distances between points.
+     *
+     * @param {Array<Array<Number>>} points - Array of digitized points
+     * @returns {Array<Number>} Parameter values
+     */
+    function chordLengthParameterize(points) {
+        var u = [],
+            currU,
+            prevU,
+            prevP;
+
+        points.forEach(function (p, i) {
+            currU = i ? prevU + maths.vectorLen(maths.subtract(p, prevP)) : 0;
+            u.push(currU);
+
+            prevU = currU;
+            prevP = p;
+        });
+        u = u.map(function (x) {
+            return x / prevU;
+        });
+
+        return u;
+    };
+
+    /**
+     * Find the maximum squared distance of digitized points to fitted curve.
+     *
+     * @param {Array<Array<Number>>} points - Array of digitized points
+     * @param {Array<Array<Number>>} bez - Fitted curve
+     * @param {Array<Number>} parameters - Parameterization of points
+     * @returns {Array<Number>} Maximum error (squared) and point of max error
+     */
+    function computeMaxError(points, bez, parameters) {
+        var dist, //Current error
+        maxDist, //Maximum error
+        splitPoint, //Point of maximum error
+        v, //Vector from point to curve
+        i, count, point, t;
+
+        maxDist = 0;
+        splitPoint = points.length / 2;
+
+        var t_distMap = mapTtoRelativeDistances(bez, 10);
+
+        for (i = 0, count = points.length; i < count; i++) {
+            point = points[i];
+            //Find 't' for a point on the bez curve that's as close to 'point' as possible:
+            t = find_t(bez, parameters[i], t_distMap, 10);
+
+            v = maths.subtract(bezier.q(bez, t), point);
+            dist = v[0] * v[0] + v[1] * v[1];
+
+            if (dist > maxDist) {
+                maxDist = dist;
+                splitPoint = i;
+            }
+        }
+
+        return [maxDist, splitPoint];
+    };
+
+    //Sample 't's and map them to relative distances along the curve:
+    var mapTtoRelativeDistances = function mapTtoRelativeDistances(bez, B_parts) {
+        var B_t_curr;
+        var B_t_dist = [0];
+        var B_t_prev = bez[0];
+        var sumLen = 0;
+
+        for (var i = 1; i <= B_parts; i++) {
+            B_t_curr = bezier.q(bez, i / B_parts);
+
+            sumLen += maths.vectorLen(maths.subtract(B_t_curr, B_t_prev));
+
+            B_t_dist.push(sumLen);
+            B_t_prev = B_t_curr;
+        }
+
+        //Normalize B_length to the same interval as the parameter distances; 0 to 1:
+        B_t_dist = B_t_dist.map(function (x) {
+            return x / sumLen;
+        });
+        return B_t_dist;
+    };
+
+    function find_t(bez, param, t_distMap, B_parts) {
+        if (param < 0) {
+            return 0;
+        }
+        if (param > 1) {
+            return 1;
+        }
+
+        /*
+            'param' is a value between 0 and 1 telling us the relative position
+            of a point on the source polyline (linearly from the start (0) to the end (1)).
+            To see if a given curve - 'bez' - is a close approximation of the polyline,
+            we compare such a poly-point to the point on the curve that's the same
+            relative distance along the curve's length.
+              But finding that curve-point takes a little work:
+            There is a function "B(t)" to find points along a curve from the parametric parameter 't'
+            (also relative from 0 to 1: http://stackoverflow.com/a/32841764/1869660
+                                        http://pomax.github.io/bezierinfo/#explanation),
+            but 't' isn't linear by length (http://gamedev.stackexchange.com/questions/105230).
+              So, we sample some points along the curve using a handful of values for 't'.
+            Then, we calculate the length between those samples via plain euclidean distance;
+            B(t) concentrates the points around sharp turns, so this should give us a good-enough outline of the curve.
+            Thus, for a given relative distance ('param'), we can now find an upper and lower value
+            for the corresponding 't' by searching through those sampled distances.
+            Finally, we just use linear interpolation to find a better value for the exact 't'.
+              More info:
+                http://gamedev.stackexchange.com/questions/105230/points-evenly-spaced-along-a-bezier-curve
+                http://stackoverflow.com/questions/29438398/cheap-way-of-calculating-cubic-bezier-length
+                http://steve.hollasch.net/cgindex/curves/cbezarclen.html
+                https://github.com/retuxx/tinyspline
+        */
+        var lenMax, lenMin, tMax, tMin, t;
+
+        //Find the two t-s that the current param distance lies between,
+        //and then interpolate a somewhat accurate value for the exact t:
+        for (var i = 1; i <= B_parts; i++) {
+
+            if (param <= t_distMap[i]) {
+                tMin = (i - 1) / B_parts;
+                tMax = i / B_parts;
+                lenMin = t_distMap[i - 1];
+                lenMax = t_distMap[i];
+
+                t = (param - lenMin) / (lenMax - lenMin) * (tMax - tMin) + tMin;
+                break;
+            }
+        }
+        return t;
+    }
+
+    /**
+     * Creates a vector of length 1 which shows the direction from B to A
+     */
+    function createTangent(pointA, pointB) {
+        return maths.normalize(maths.subtract(pointA, pointB));
+    }
+
+    /*
+        Simplified versions of what we need from math.js
+        Optimized for our input, which is only numbers and 1x2 arrays (i.e. [x, y] coordinates).
+    */
+
+    var maths = function () {
+        function maths() {
+            _classCallCheck(this, maths);
+        }
+
+        maths.zeros_Xx2x2 = function zeros_Xx2x2(x) {
+            var zs = [];
+            while (x--) {
+                zs.push([0, 0]);
+            }
+            return zs;
+        };
+
+        maths.mulItems = function mulItems(items, multiplier) {
+            //return items.map(x => x*multiplier);
+            return [items[0] * multiplier, items[1] * multiplier];
+        };
+
+        maths.mulMatrix = function mulMatrix(m1, m2) {
+            //https://en.wikipedia.org/wiki/Matrix_multiplication#Matrix_product_.28two_matrices.29
+            //Simplified to only handle 1-dimensional matrices (i.e. arrays) of equal length:
+            //  return m1.reduce((sum,x1,i) => sum + (x1*m2[i]),
+            //                   0);
+            return m1[0] * m2[0] + m1[1] * m2[1];
+        };
+
+        maths.subtract = function subtract(arr1, arr2) {
+            //return arr1.map((x1, i) => x1 - arr2[i]);
+            return [arr1[0] - arr2[0], arr1[1] - arr2[1]];
+        };
+
+        maths.addArrays = function addArrays(arr1, arr2) {
+            //return arr1.map((x1, i) => x1 + arr2[i]);
+            return [arr1[0] + arr2[0], arr1[1] + arr2[1]];
+        };
+
+        maths.addItems = function addItems(items, addition) {
+            //return items.map(x => x+addition);
+            return [items[0] + addition, items[1] + addition];
+        };
+
+        maths.sum = function sum(items) {
+            return items.reduce(function (sum, x) {
+                return sum + x;
+            });
+        };
+
+        maths.dot = function dot(m1, m2) {
+            return maths.mulMatrix(m1, m2);
+        };
+
+        maths.vectorLen = function vectorLen(v) {
+            var a = v[0],
+                b = v[1];
+            return Math.sqrt(a * a + b * b);
+        };
+
+        maths.divItems = function divItems(items, divisor) {
+            //return items.map(x => x/divisor);
+            return [items[0] / divisor, items[1] / divisor];
+        };
+
+        maths.squareItems = function squareItems(items) {
+            //return items.map(x => x*x);
+            var a = items[0],
+                b = items[1];
+            return [a * a, b * b];
+        };
+
+        maths.normalize = function normalize(v) {
+            return this.divItems(v, this.vectorLen(v));
+        };
+
+        return maths;
+    }();
+
+    var bezier = function () {
+        function bezier() {
+            _classCallCheck(this, bezier);
+        }
+
+        bezier.q = function q(ctrlPoly, t) {
+            var tx = 1.0 - t;
+            var pA = maths.mulItems(ctrlPoly[0], tx * tx * tx),
+                pB = maths.mulItems(ctrlPoly[1], 3 * tx * tx * t),
+                pC = maths.mulItems(ctrlPoly[2], 3 * tx * t * t),
+                pD = maths.mulItems(ctrlPoly[3], t * t * t);
+            return maths.addArrays(maths.addArrays(pA, pB), maths.addArrays(pC, pD));
+        };
+
+        bezier.qprime = function qprime(ctrlPoly, t) {
+            var tx = 1.0 - t;
+            var pA = maths.mulItems(maths.subtract(ctrlPoly[1], ctrlPoly[0]), 3 * tx * tx),
+                pB = maths.mulItems(maths.subtract(ctrlPoly[2], ctrlPoly[1]), 6 * tx * t),
+                pC = maths.mulItems(maths.subtract(ctrlPoly[3], ctrlPoly[2]), 3 * t * t);
+            return maths.addArrays(maths.addArrays(pA, pB), pC);
+        };
+
+        bezier.qprimeprime = function qprimeprime(ctrlPoly, t) {
+            return maths.addArrays(maths.mulItems(maths.addArrays(maths.subtract(ctrlPoly[2], maths.mulItems(ctrlPoly[1], 2)), ctrlPoly[0]), 6 * (1.0 - t)), maths.mulItems(maths.addArrays(maths.subtract(ctrlPoly[3], maths.mulItems(ctrlPoly[2], 2)), ctrlPoly[1]), 6 * t));
+        };
+
+        return bezier;
+    }();
+
+    module.exports = fitCurve;
+});
+
+},{}],5:[function(require,module,exports){
 // Programatically add fork me on github ribbon from javascript without making changes to CSS, HTML, or adding image files
 // by David Figatner
 // copyright 2017 YOPEY YOPEY LLC
@@ -591,7 +1184,7 @@ module.exports = function forkMe(url, options)
     sheet.insertRule('.' + a.className + '::before' + before + '}')
     sheet.insertRule('.' + a.className + '::after' + after + '}')
 }
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*
 Syntax highlighting with language autodetection.
 https://highlightjs.org/
@@ -1409,7 +2002,7 @@ https://highlightjs.org/
   return hljs;
 }));
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var hljs = require('./highlight');
 
 hljs.registerLanguage('1c', require('./languages/1c'));
@@ -1590,7 +2183,7 @@ hljs.registerLanguage('xquery', require('./languages/xquery'));
 hljs.registerLanguage('zephir', require('./languages/zephir'));
 
 module.exports = hljs;
-},{"./highlight":5,"./languages/1c":7,"./languages/abnf":8,"./languages/accesslog":9,"./languages/actionscript":10,"./languages/ada":11,"./languages/apache":12,"./languages/applescript":13,"./languages/arduino":14,"./languages/armasm":15,"./languages/asciidoc":16,"./languages/aspectj":17,"./languages/autohotkey":18,"./languages/autoit":19,"./languages/avrasm":20,"./languages/awk":21,"./languages/axapta":22,"./languages/bash":23,"./languages/basic":24,"./languages/bnf":25,"./languages/brainfuck":26,"./languages/cal":27,"./languages/capnproto":28,"./languages/ceylon":29,"./languages/clean":30,"./languages/clojure":32,"./languages/clojure-repl":31,"./languages/cmake":33,"./languages/coffeescript":34,"./languages/coq":35,"./languages/cos":36,"./languages/cpp":37,"./languages/crmsh":38,"./languages/crystal":39,"./languages/cs":40,"./languages/csp":41,"./languages/css":42,"./languages/d":43,"./languages/dart":44,"./languages/delphi":45,"./languages/diff":46,"./languages/django":47,"./languages/dns":48,"./languages/dockerfile":49,"./languages/dos":50,"./languages/dsconfig":51,"./languages/dts":52,"./languages/dust":53,"./languages/ebnf":54,"./languages/elixir":55,"./languages/elm":56,"./languages/erb":57,"./languages/erlang":59,"./languages/erlang-repl":58,"./languages/excel":60,"./languages/fix":61,"./languages/flix":62,"./languages/fortran":63,"./languages/fsharp":64,"./languages/gams":65,"./languages/gauss":66,"./languages/gcode":67,"./languages/gherkin":68,"./languages/glsl":69,"./languages/go":70,"./languages/golo":71,"./languages/gradle":72,"./languages/groovy":73,"./languages/haml":74,"./languages/handlebars":75,"./languages/haskell":76,"./languages/haxe":77,"./languages/hsp":78,"./languages/htmlbars":79,"./languages/http":80,"./languages/hy":81,"./languages/inform7":82,"./languages/ini":83,"./languages/irpf90":84,"./languages/java":85,"./languages/javascript":86,"./languages/jboss-cli":87,"./languages/json":88,"./languages/julia":90,"./languages/julia-repl":89,"./languages/kotlin":91,"./languages/lasso":92,"./languages/ldif":93,"./languages/leaf":94,"./languages/less":95,"./languages/lisp":96,"./languages/livecodeserver":97,"./languages/livescript":98,"./languages/llvm":99,"./languages/lsl":100,"./languages/lua":101,"./languages/makefile":102,"./languages/markdown":103,"./languages/mathematica":104,"./languages/matlab":105,"./languages/maxima":106,"./languages/mel":107,"./languages/mercury":108,"./languages/mipsasm":109,"./languages/mizar":110,"./languages/mojolicious":111,"./languages/monkey":112,"./languages/moonscript":113,"./languages/n1ql":114,"./languages/nginx":115,"./languages/nimrod":116,"./languages/nix":117,"./languages/nsis":118,"./languages/objectivec":119,"./languages/ocaml":120,"./languages/openscad":121,"./languages/oxygene":122,"./languages/parser3":123,"./languages/perl":124,"./languages/pf":125,"./languages/php":126,"./languages/pony":127,"./languages/powershell":128,"./languages/processing":129,"./languages/profile":130,"./languages/prolog":131,"./languages/protobuf":132,"./languages/puppet":133,"./languages/purebasic":134,"./languages/python":135,"./languages/q":136,"./languages/qml":137,"./languages/r":138,"./languages/rib":139,"./languages/roboconf":140,"./languages/routeros":141,"./languages/rsl":142,"./languages/ruby":143,"./languages/ruleslanguage":144,"./languages/rust":145,"./languages/scala":146,"./languages/scheme":147,"./languages/scilab":148,"./languages/scss":149,"./languages/shell":150,"./languages/smali":151,"./languages/smalltalk":152,"./languages/sml":153,"./languages/sqf":154,"./languages/sql":155,"./languages/stan":156,"./languages/stata":157,"./languages/step21":158,"./languages/stylus":159,"./languages/subunit":160,"./languages/swift":161,"./languages/taggerscript":162,"./languages/tap":163,"./languages/tcl":164,"./languages/tex":165,"./languages/thrift":166,"./languages/tp":167,"./languages/twig":168,"./languages/typescript":169,"./languages/vala":170,"./languages/vbnet":171,"./languages/vbscript":173,"./languages/vbscript-html":172,"./languages/verilog":174,"./languages/vhdl":175,"./languages/vim":176,"./languages/x86asm":177,"./languages/xl":178,"./languages/xml":179,"./languages/xquery":180,"./languages/yaml":181,"./languages/zephir":182}],7:[function(require,module,exports){
+},{"./highlight":6,"./languages/1c":8,"./languages/abnf":9,"./languages/accesslog":10,"./languages/actionscript":11,"./languages/ada":12,"./languages/apache":13,"./languages/applescript":14,"./languages/arduino":15,"./languages/armasm":16,"./languages/asciidoc":17,"./languages/aspectj":18,"./languages/autohotkey":19,"./languages/autoit":20,"./languages/avrasm":21,"./languages/awk":22,"./languages/axapta":23,"./languages/bash":24,"./languages/basic":25,"./languages/bnf":26,"./languages/brainfuck":27,"./languages/cal":28,"./languages/capnproto":29,"./languages/ceylon":30,"./languages/clean":31,"./languages/clojure":33,"./languages/clojure-repl":32,"./languages/cmake":34,"./languages/coffeescript":35,"./languages/coq":36,"./languages/cos":37,"./languages/cpp":38,"./languages/crmsh":39,"./languages/crystal":40,"./languages/cs":41,"./languages/csp":42,"./languages/css":43,"./languages/d":44,"./languages/dart":45,"./languages/delphi":46,"./languages/diff":47,"./languages/django":48,"./languages/dns":49,"./languages/dockerfile":50,"./languages/dos":51,"./languages/dsconfig":52,"./languages/dts":53,"./languages/dust":54,"./languages/ebnf":55,"./languages/elixir":56,"./languages/elm":57,"./languages/erb":58,"./languages/erlang":60,"./languages/erlang-repl":59,"./languages/excel":61,"./languages/fix":62,"./languages/flix":63,"./languages/fortran":64,"./languages/fsharp":65,"./languages/gams":66,"./languages/gauss":67,"./languages/gcode":68,"./languages/gherkin":69,"./languages/glsl":70,"./languages/go":71,"./languages/golo":72,"./languages/gradle":73,"./languages/groovy":74,"./languages/haml":75,"./languages/handlebars":76,"./languages/haskell":77,"./languages/haxe":78,"./languages/hsp":79,"./languages/htmlbars":80,"./languages/http":81,"./languages/hy":82,"./languages/inform7":83,"./languages/ini":84,"./languages/irpf90":85,"./languages/java":86,"./languages/javascript":87,"./languages/jboss-cli":88,"./languages/json":89,"./languages/julia":91,"./languages/julia-repl":90,"./languages/kotlin":92,"./languages/lasso":93,"./languages/ldif":94,"./languages/leaf":95,"./languages/less":96,"./languages/lisp":97,"./languages/livecodeserver":98,"./languages/livescript":99,"./languages/llvm":100,"./languages/lsl":101,"./languages/lua":102,"./languages/makefile":103,"./languages/markdown":104,"./languages/mathematica":105,"./languages/matlab":106,"./languages/maxima":107,"./languages/mel":108,"./languages/mercury":109,"./languages/mipsasm":110,"./languages/mizar":111,"./languages/mojolicious":112,"./languages/monkey":113,"./languages/moonscript":114,"./languages/n1ql":115,"./languages/nginx":116,"./languages/nimrod":117,"./languages/nix":118,"./languages/nsis":119,"./languages/objectivec":120,"./languages/ocaml":121,"./languages/openscad":122,"./languages/oxygene":123,"./languages/parser3":124,"./languages/perl":125,"./languages/pf":126,"./languages/php":127,"./languages/pony":128,"./languages/powershell":129,"./languages/processing":130,"./languages/profile":131,"./languages/prolog":132,"./languages/protobuf":133,"./languages/puppet":134,"./languages/purebasic":135,"./languages/python":136,"./languages/q":137,"./languages/qml":138,"./languages/r":139,"./languages/rib":140,"./languages/roboconf":141,"./languages/routeros":142,"./languages/rsl":143,"./languages/ruby":144,"./languages/ruleslanguage":145,"./languages/rust":146,"./languages/scala":147,"./languages/scheme":148,"./languages/scilab":149,"./languages/scss":150,"./languages/shell":151,"./languages/smali":152,"./languages/smalltalk":153,"./languages/sml":154,"./languages/sqf":155,"./languages/sql":156,"./languages/stan":157,"./languages/stata":158,"./languages/step21":159,"./languages/stylus":160,"./languages/subunit":161,"./languages/swift":162,"./languages/taggerscript":163,"./languages/tap":164,"./languages/tcl":165,"./languages/tex":166,"./languages/thrift":167,"./languages/tp":168,"./languages/twig":169,"./languages/typescript":170,"./languages/vala":171,"./languages/vbnet":172,"./languages/vbscript":174,"./languages/vbscript-html":173,"./languages/verilog":175,"./languages/vhdl":176,"./languages/vim":177,"./languages/x86asm":178,"./languages/xl":179,"./languages/xml":180,"./languages/xquery":181,"./languages/yaml":182,"./languages/zephir":183}],8:[function(require,module,exports){
 module.exports = function(hljs){
 
   // общий паттерн для определения идентификаторов
@@ -2100,7 +2693,7 @@ module.exports = function(hljs){
     ]  
   }
 };
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = function(hljs) {
     var regexes = {
         ruleDeclaration: "^[a-zA-Z][a-zA-Z0-9-]*",
@@ -2171,7 +2764,7 @@ module.exports = function(hljs) {
       ]
     };
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -2209,7 +2802,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[a-zA-Z_$][a-zA-Z0-9_$]*';
   var IDENT_FUNC_RETURN_TYPE_RE = '([*]|[a-zA-Z_$][a-zA-Z0-9_$]*)';
@@ -2283,7 +2876,7 @@ module.exports = function(hljs) {
     illegal: /#/
   };
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 module.exports = // We try to support full Ada2012
 //
 // We highlight all appearances of types, keywords, literals (string, char, number, bool)
@@ -2456,7 +3049,7 @@ function(hljs) {
         ]
     };
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUMBER = {className: 'number', begin: '[\\$%]\\d+'};
   return {
@@ -2502,7 +3095,7 @@ module.exports = function(hljs) {
     illegal: /\S/
   };
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = function(hljs) {
   var STRING = hljs.inherit(hljs.QUOTE_STRING_MODE, {illegal: ''});
   var PARAMS = {
@@ -2588,7 +3181,7 @@ module.exports = function(hljs) {
     illegal: '//|->|=>|\\[\\['
   };
 };
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function(hljs) {
   var CPP = hljs.getLanguage('cpp').exports;
 	return {
@@ -2688,7 +3281,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = function(hljs) {
     //local labels: %?[FB]?[AT]?\d{1,2}\w+
   return {
@@ -2780,7 +3373,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['adoc'],
@@ -2968,7 +3561,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = function (hljs) {
   var KEYWORDS =
     'false synchronized int abstract float private char boolean static null if const ' +
@@ -3113,7 +3706,7 @@ module.exports = function (hljs) {
     ]
   };
 };
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 module.exports = function(hljs) {
   var BACKTICK_ESCAPE = {
     begin: '`[\\s\\S]'
@@ -3172,7 +3765,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 module.exports = function(hljs) {
     var KEYWORDS = 'ByRef Case Const ContinueCase ContinueLoop ' +
         'Default Dim Do Else ElseIf EndFunc EndIf EndSelect ' +
@@ -3308,7 +3901,7 @@ module.exports = function(hljs) {
         ]
     }
 };
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -3370,7 +3963,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = function(hljs) {
   var VARIABLE = {
     className: 'variable',
@@ -3423,7 +4016,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: 'false int abstract private char boolean static null if for true ' +
@@ -3454,7 +4047,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 module.exports = function(hljs) {
   var VAR = {
     className: 'variable',
@@ -3529,7 +4122,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -3580,7 +4173,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 module.exports = function(hljs){
   return {
     contains: [
@@ -3609,7 +4202,7 @@ module.exports = function(hljs){
     ]
   };
 };
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 module.exports = function(hljs){
   var LITERAL = {
     className: 'literal',
@@ -3646,7 +4239,7 @@ module.exports = function(hljs){
     ]
   };
 };
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS =
     'div mod in and or not xor asserterror begin case do downto else end exit for if of repeat then to ' +
@@ -3726,7 +4319,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['capnp'],
@@ -3775,7 +4368,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 module.exports = function(hljs) {
   // 2.3. Identifiers and keywords
   var KEYWORDS =
@@ -3842,7 +4435,7 @@ module.exports = function(hljs) {
     ].concat(EXPRESSIONS)
   };
 };
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['clean','icl','dcl'],
@@ -3867,7 +4460,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -3882,7 +4475,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 module.exports = function(hljs) {
   var keywords = {
     'builtin-name':
@@ -3978,7 +4571,7 @@ module.exports = function(hljs) {
     contains: [LIST, STRING, HINT, HINT_COL, COMMENT, KEY, COLLECTION, NUMBER, LITERAL]
   }
 };
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['cmake.in'],
@@ -4016,7 +4609,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -4162,7 +4755,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -4229,7 +4822,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 module.exports = function cos (hljs) {
 
   var STRINGS = {
@@ -4353,7 +4946,7 @@ module.exports = function cos (hljs) {
     ]
   };
 };
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module.exports = function(hljs) {
   var CPP_PRIMITIVE_TYPES = {
     className: 'keyword',
@@ -4528,7 +5121,7 @@ module.exports = function(hljs) {
     }
   };
 };
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 module.exports = function(hljs) {
   var RESOURCES = 'primitive rsc_template';
 
@@ -4622,7 +5215,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUM_SUFFIX = '(_[uif](8|16|32|64))?';
   var CRYSTAL_IDENT_RE = '[a-zA-Z_]\\w*[!?=]?';
@@ -4816,7 +5409,7 @@ module.exports = function(hljs) {
     contains: CRYSTAL_DEFAULT_CONTAINS
   };
 };
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -4993,7 +5586,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: false,
@@ -5015,7 +5608,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
   var RULE = {
@@ -5120,7 +5713,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],43:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 module.exports = /**
  * Known issues:
  *
@@ -5378,7 +5971,7 @@ function(hljs) {
     ]
   };
 };
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = function (hljs) {
   var SUBST = {
     className: 'subst',
@@ -5479,7 +6072,7 @@ module.exports = function (hljs) {
     ]
   }
 };
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS =
     'exports register file shl array record property for mod while set ally label uses raise not ' +
@@ -5548,7 +6141,7 @@ module.exports = function(hljs) {
     ].concat(COMMENT_MODES)
   };
 };
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['patch'],
@@ -5588,7 +6181,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module.exports = function(hljs) {
   var FILTER = {
     begin: /\|[A-Za-z]+:?/,
@@ -5652,7 +6245,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['bind', 'zone'],
@@ -5681,7 +6274,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['docker'],
@@ -5703,7 +6296,7 @@ module.exports = function(hljs) {
     illegal: '</'
   }
 };
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMENT = hljs.COMMENT(
     /^\s*@?rem\b/, /$/,
@@ -5755,7 +6348,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 module.exports = function(hljs) {
   var QUOTED_PROPERTY = {
     className: 'string',
@@ -5802,7 +6395,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports = function(hljs) {
   var STRINGS = {
     className: 'string',
@@ -5926,7 +6519,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 module.exports = function(hljs) {
   var EXPRESSION_KEYWORDS = 'if eq ne lt lte gt gte select default math sep';
   return {
@@ -5958,7 +6551,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports = function(hljs) {
     var commentMode = hljs.COMMENT(/\(\*/, /\*\)/);
 
@@ -5991,7 +6584,7 @@ module.exports = function(hljs) {
         ]
     };
 };
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 module.exports = function(hljs) {
   var ELIXIR_IDENT_RE = '[a-zA-Z_][a-zA-Z0-9_]*(\\!|\\?)?';
   var ELIXIR_METHOD_RE = '[a-zA-Z_]\\w*[!?=]?|[-+~]\\@|<<|>>|=~|===?|<=>|[<>]=?|\\*\\*|[-/+%^&*~`|]|\\[\\]=?';
@@ -6088,7 +6681,7 @@ module.exports = function(hljs) {
     contains: ELIXIR_DEFAULT_CONTAINS
   };
 };
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMENT = {
     variants: [
@@ -6172,7 +6765,7 @@ module.exports = function(hljs) {
     illegal: /;/
   };
 };
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     subLanguage: 'xml',
@@ -6187,7 +6780,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -6233,7 +6826,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 module.exports = function(hljs) {
   var BASIC_ATOM_RE = '[a-z\'][a-zA-Z0-9_\']*';
   var FUNCTION_NAME_RE = '(' + BASIC_ATOM_RE + ':' + BASIC_ATOM_RE + '|' + BASIC_ATOM_RE + ')';
@@ -6379,7 +6972,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['xlsx', 'xls'],
@@ -6427,7 +7020,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -6456,7 +7049,7 @@ module.exports = function(hljs) {
     case_insensitive: true
   };
 };
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 module.exports = function (hljs) {
 
     var CHAR = {
@@ -6501,7 +7094,7 @@ module.exports = function (hljs) {
         ]
     };
 };
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 module.exports = function(hljs) {
   var PARAMS = {
     className: 'params',
@@ -6572,7 +7165,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 module.exports = function(hljs) {
   var TYPEPARAM = {
     begin: '<', end: '>',
@@ -6631,7 +7224,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 module.exports = function (hljs) {
   var KEYWORDS = {
     'keyword':
@@ -6785,7 +7378,7 @@ module.exports = function (hljs) {
     ]
   };
 };
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword: 'and bool break call callexe checkinterrupt clear clearg closeall cls comlog compile ' +
@@ -7009,7 +7602,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 module.exports = function(hljs) {
     var GCODE_IDENT_RE = '[A-Z_][A-Z0-9_.]*';
     var GCODE_CLOSE_RE = '\\%';
@@ -7076,7 +7669,7 @@ module.exports = function(hljs) {
         ].concat(GCODE_CODE)
     };
 };
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 module.exports = function (hljs) {
   return {
     aliases: ['feature'],
@@ -7113,7 +7706,7 @@ module.exports = function (hljs) {
     ]
   };
 };
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -7230,7 +7823,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 module.exports = function(hljs) {
   var GO_KEYWORDS = {
     keyword:
@@ -7284,7 +7877,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 module.exports = function(hljs) {
     return {
       keywords: {
@@ -7307,7 +7900,7 @@ module.exports = function(hljs) {
       ]
     }
 };
-},{}],72:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -7342,7 +7935,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],73:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 module.exports = function(hljs) {
     return {
         keywords: {
@@ -7436,7 +8029,7 @@ module.exports = function(hljs) {
         illegal: /#|<\//
     }
 };
-},{}],74:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 module.exports = // TODO support filter tags like :javascript, support inline HTML
 function(hljs) {
   return {
@@ -7543,7 +8136,7 @@ function(hljs) {
     ]
   };
 };
-},{}],75:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILT_INS = {'builtin-name': 'each in with if else unless bindattr action collection debugger log outlet template unbound view yield'};
   return {
@@ -7577,7 +8170,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],76:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMENT = {
     variants: [
@@ -7699,7 +8292,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],77:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[a-zA-Z_$][a-zA-Z0-9_$]*';
   var IDENT_FUNC_RETURN_TYPE_RE = '([*]|[a-zA-Z_$][a-zA-Z0-9_$]*)';
@@ -7811,7 +8404,7 @@ module.exports = function(hljs) {
     illegal: /<\//
   };
 };
-},{}],78:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -7857,7 +8450,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],79:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILT_INS = 'action collection component concat debugger each each-in else get hash if input link-to loc log mut outlet partial query-params render textarea unbound unless with yield view';
 
@@ -7928,7 +8521,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],80:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 module.exports = function(hljs) {
   var VERSION = 'HTTP/[0-9\\.]+';
   return {
@@ -7969,7 +8562,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],81:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 module.exports = function(hljs) {
   var keywords = {
     'builtin-name':
@@ -8071,7 +8664,7 @@ module.exports = function(hljs) {
     contains: [SHEBANG, LIST, STRING, HINT, HINT_COL, COMMENT, KEY, COLLECTION, NUMBER, LITERAL]
   }
 };
-},{}],82:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 module.exports = function(hljs) {
   var START_BRACKET = '\\[';
   var END_BRACKET = '\\]';
@@ -8128,7 +8721,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],83:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 module.exports = function(hljs) {
   var STRING = {
     className: "string",
@@ -8194,7 +8787,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],84:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 module.exports = function(hljs) {
   var PARAMS = {
     className: 'params',
@@ -8270,7 +8863,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],85:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 module.exports = function(hljs) {
   var JAVA_IDENT_RE = '[\u00C0-\u02B8a-zA-Z_$][\u00C0-\u02B8a-zA-Z_$0-9]*';
   var GENERIC_IDENT_RE = JAVA_IDENT_RE + '(<' + JAVA_IDENT_RE + '(\\s*,\\s*' + JAVA_IDENT_RE + ')*>)?';
@@ -8378,7 +8971,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],86:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
   var KEYWORDS = {
@@ -8549,7 +9142,7 @@ module.exports = function(hljs) {
     illegal: /#(?!!)/
   };
 };
-},{}],87:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 module.exports = function (hljs) {
   var PARAM = {
     begin: /[\w-]+ *=/, returnBegin: true,
@@ -8596,7 +9189,7 @@ module.exports = function (hljs) {
     ]
   }
 };
-},{}],88:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 module.exports = function(hljs) {
   var LITERALS = {literal: 'true false null'};
   var TYPES = [
@@ -8633,7 +9226,7 @@ module.exports = function(hljs) {
     illegal: '\\S'
   };
 };
-},{}],89:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -8657,7 +9250,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],90:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 module.exports = function(hljs) {
   // Since there are numerous special names in Julia, it is too much trouble
   // to maintain them by hand. Hence these names (i.e. keywords, literals and
@@ -8819,7 +9412,7 @@ module.exports = function(hljs) {
 
   return DEFAULT;
 };
-},{}],91:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -8993,7 +9586,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],92:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 module.exports = function(hljs) {
   var LASSO_IDENT_RE = '[a-zA-Z_][\\w.]*';
   var LASSO_ANGLE_RE = '<\\?(lasso(script)?|=)';
@@ -9156,7 +9749,7 @@ module.exports = function(hljs) {
     ].concat(LASSO_CODE)
   };
 };
-},{}],93:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -9179,7 +9772,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],94:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module.exports = function (hljs) {
   return {
     contains: [
@@ -9219,7 +9812,7 @@ module.exports = function (hljs) {
     ]
   };
 };
-},{}],95:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE        = '[\\w-]+'; // yes, Less identifiers may begin with a digit
   var INTERP_IDENT_RE = '(' + IDENT_RE + '|@{' + IDENT_RE + '})';
@@ -9359,7 +9952,7 @@ module.exports = function(hljs) {
     contains: RULES
   };
 };
-},{}],96:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 module.exports = function(hljs) {
   var LISP_IDENT_RE = '[a-zA-Z_\\-\\+\\*\\/\\<\\=\\>\\&\\#][a-zA-Z0-9_\\-\\+\\*\\/\\<\\=\\>\\&\\#!]*';
   var MEC_RE = '\\|[^]*?\\|';
@@ -9462,7 +10055,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],97:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 module.exports = function(hljs) {
   var VARIABLE = {
     begin: '\\b[gtps][A-Z]+[A-Za-z0-9_\\-]*\\b|\\$_[A-Z]+',
@@ -9619,7 +10212,7 @@ module.exports = function(hljs) {
     illegal: ';$|^\\[|^=|&|{'
   };
 };
-},{}],98:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -9768,7 +10361,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],99:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 module.exports = function(hljs) {
   var identifier = '([-a-zA-Z$._][\\w\\-$.]*)';
   return {
@@ -9857,7 +10450,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],100:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 module.exports = function(hljs) {
 
     var LSL_STRING_ESCAPE_CHARS = {
@@ -9940,7 +10533,7 @@ module.exports = function(hljs) {
         ]
     };
 };
-},{}],101:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 module.exports = function(hljs) {
   var OPENING_LONG_BRACKET = '\\[=*\\[';
   var CLOSING_LONG_BRACKET = '\\]=*\\]';
@@ -10006,7 +10599,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],102:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 module.exports = function(hljs) {
   /* Variables: simple (eg $(var)) and special (eg $@) */
   var VARIABLE = {
@@ -10087,7 +10680,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],103:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['md', 'mkdown', 'mkd'],
@@ -10195,7 +10788,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],104:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['mma'],
@@ -10253,7 +10846,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],105:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMON_CONTAINS = [
     hljs.C_NUMBER_MODE,
@@ -10341,7 +10934,7 @@ module.exports = function(hljs) {
     ].concat(COMMON_CONTAINS)
   };
 };
-},{}],106:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = 'if then else elseif for thru do while unless step in and or not';
   var LITERALS = 'true false unknown inf minf ind und %e %i %pi %phi %gamma';
@@ -10747,7 +11340,7 @@ module.exports = function(hljs) {
     illegal: /@/
   }
 };
-},{}],107:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -10972,7 +11565,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],108:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -11054,7 +11647,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],109:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 module.exports = function(hljs) {
     //local labels: %?[FB]?[AT]?\d{1,2}\w+
   return {
@@ -11140,7 +11733,7 @@ module.exports = function(hljs) {
     illegal: '\/'
   };
 };
-},{}],110:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -11159,7 +11752,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],111:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     subLanguage: 'xml',
@@ -11184,7 +11777,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],112:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUMBER = {
     className: 'number', relevance: 0,
@@ -11259,7 +11852,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],113:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -11371,7 +11964,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],114:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -11440,7 +12033,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],115:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 module.exports = function(hljs) {
   var VAR = {
     className: 'variable',
@@ -11533,7 +12126,7 @@ module.exports = function(hljs) {
     illegal: '[^\\s\\}]'
   };
 };
-},{}],116:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['nim'],
@@ -11588,7 +12181,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],117:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 module.exports = function(hljs) {
   var NIX_KEYWORDS = {
     keyword:
@@ -11637,7 +12230,7 @@ module.exports = function(hljs) {
     contains: EXPRESSIONS
   };
 };
-},{}],118:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 module.exports = function(hljs) {
   var CONSTANTS = {
     className: 'variable',
@@ -11743,7 +12336,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],119:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 module.exports = function(hljs) {
   var API_CLASS = {
     className: 'built_in',
@@ -11834,7 +12427,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],120:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 module.exports = function(hljs) {
   /* missing support for heredoc-like string (OCaml 4.0.2+) */
   return {
@@ -11905,7 +12498,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],121:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 module.exports = function(hljs) {
 	var SPECIAL_VARS = {
 		className: 'keyword',
@@ -11962,7 +12555,7 @@ module.exports = function(hljs) {
 		]
 	}
 };
-},{}],122:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 module.exports = function(hljs) {
   var OXYGENE_KEYWORDS = 'abstract add and array as asc aspect assembly async begin break block by case class concat const copy constructor continue '+
     'create default delegate desc distinct div do downto dynamic each else empty end ensure enum equals event except exit extension external false '+
@@ -12032,7 +12625,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],123:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 module.exports = function(hljs) {
   var CURLY_SUBCOMMENT = hljs.COMMENT(
     '{',
@@ -12080,7 +12673,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],124:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 module.exports = function(hljs) {
   var PERL_KEYWORDS = 'getpwent getservent quotemeta msgrcv scalar kill dbmclose undef lc ' +
     'ma syswrite tr send umask sysopen shmwrite vec qx utime local oct semctl localtime ' +
@@ -12237,7 +12830,7 @@ module.exports = function(hljs) {
     contains: PERL_DEFAULT_CONTAINS
   };
 };
-},{}],125:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 module.exports = function(hljs) {
   var MACRO = {
     className: 'variable',
@@ -12289,7 +12882,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],126:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 module.exports = function(hljs) {
   var VARIABLE = {
     begin: '\\$+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*'
@@ -12416,7 +13009,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],127:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -12507,7 +13100,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],128:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 module.exports = function(hljs) {
   var BACKTICK_ESCAPE = {
     begin: '`[\\s\\S]',
@@ -12588,7 +13181,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],129:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -12636,7 +13229,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],130:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -12666,7 +13259,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],131:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var ATOM = {
@@ -12754,7 +13347,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],132:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -12790,7 +13383,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],133:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var PUPPET_KEYWORDS = {
@@ -12905,7 +13498,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],134:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 module.exports = // Base deafult colors in PB IDE: background: #FFFFDF; foreground: #000000;
 
 function(hljs) {
@@ -12963,7 +13556,7 @@ function(hljs) {
     ]
   };
 };
-},{}],135:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -13079,7 +13672,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],136:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 module.exports = function(hljs) {
   var Q_KEYWORDS = {
   keyword:
@@ -13102,7 +13695,7 @@ module.exports = function(hljs) {
      ]
   };
 };
-},{}],137:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
       keyword:
@@ -13271,7 +13864,7 @@ module.exports = function(hljs) {
     illegal: /#/
   };
 };
-},{}],138:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '([a-zA-Z]|\\.[a-zA-Z.])[a-zA-Z0-9._]*';
 
@@ -13341,7 +13934,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],139:[function(require,module,exports){
+},{}],140:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -13368,7 +13961,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],140:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENTIFIER = '[a-zA-Z-_][^\\n{]+\\{';
 
@@ -13435,7 +14028,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],141:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 module.exports = // Colors from RouterOS terminal:
 //   green        - #0E9A00
 //   teal         - #0C9A9A
@@ -13594,7 +14187,7 @@ function(hljs) {
     ]
   };
 };
-},{}],142:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -13630,7 +14223,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],143:[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 module.exports = function(hljs) {
   var RUBY_METHOD_RE = '[a-zA-Z_]\\w*[!?=]?|[-+~]\\@|<<|>>|=~|===?|<=>|[<>]=?|\\*\\*|[-/+%^&*~`|]|\\[\\]=?';
   var RUBY_KEYWORDS = {
@@ -13807,7 +14400,7 @@ module.exports = function(hljs) {
     contains: COMMENT_MODES.concat(IRB_DEFAULT).concat(RUBY_DEFAULT_CONTAINS)
   };
 };
-},{}],144:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -13868,7 +14461,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],145:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUM_SUFFIX = '([ui](8|16|32|64|128|size)|f(32|64))\?';
   var KEYWORDS =
@@ -13976,7 +14569,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],146:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var ANNOTATION = { className: 'meta', begin: '@[A-Za-z]+' };
@@ -14091,7 +14684,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],147:[function(require,module,exports){
+},{}],148:[function(require,module,exports){
 module.exports = function(hljs) {
   var SCHEME_IDENT_RE = '[^\\(\\)\\[\\]\\{\\}",\'`;#|\\\\\\s]+';
   var SCHEME_SIMPLE_NUMBER_RE = '(\\-|\\+)?\\d+([./]\\d+)?';
@@ -14235,7 +14828,7 @@ module.exports = function(hljs) {
     contains: [SHEBANG, NUMBER, STRING, QUOTED_IDENT, QUOTED_LIST, LIST].concat(COMMENT_MODES)
   };
 };
-},{}],148:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var COMMON_CONTAINS = [
@@ -14289,7 +14882,7 @@ module.exports = function(hljs) {
     ].concat(COMMON_CONTAINS)
   };
 };
-},{}],149:[function(require,module,exports){
+},{}],150:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
   var VARIABLE = {
@@ -14387,7 +14980,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],150:[function(require,module,exports){
+},{}],151:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['console'],
@@ -14402,7 +14995,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],151:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 module.exports = function(hljs) {
   var smali_instr_low_prio = ['add', 'and', 'cmp', 'cmpg', 'cmpl', 'const', 'div', 'double', 'float', 'goto', 'if', 'int', 'long', 'move', 'mul', 'neg', 'new', 'nop', 'not', 'or', 'rem', 'return', 'shl', 'shr', 'sput', 'sub', 'throw', 'ushr', 'xor'];
   var smali_instr_high_prio = ['aget', 'aput', 'array', 'check', 'execute', 'fill', 'filled', 'goto/16', 'goto/32', 'iget', 'instance', 'invoke', 'iput', 'monitor', 'packed', 'sget', 'sparse'];
@@ -14458,7 +15051,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],152:[function(require,module,exports){
+},{}],153:[function(require,module,exports){
 module.exports = function(hljs) {
   var VAR_IDENT_RE = '[a-z][a-zA-Z0-9_]*';
   var CHAR = {
@@ -14508,7 +15101,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],153:[function(require,module,exports){
+},{}],154:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['ml'],
@@ -14574,7 +15167,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],154:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 module.exports = function(hljs) {
   var CPP = hljs.getLanguage('cpp').exports;
 
@@ -14945,7 +15538,7 @@ module.exports = function(hljs) {
     illegal: /#/
   };
 };
-},{}],155:[function(require,module,exports){
+},{}],156:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMENT_MODE = hljs.COMMENT('--', '$');
   return {
@@ -15105,7 +15698,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],156:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -15188,7 +15781,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],157:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['do', 'ado'],
@@ -15226,7 +15819,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],158:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 module.exports = function(hljs) {
   var STEP21_IDENT_RE = '[A-Z_][A-Z0-9_.]*';
   var STEP21_KEYWORDS = {
@@ -15273,7 +15866,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],159:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var VARIABLE = {
@@ -15727,7 +16320,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],160:[function(require,module,exports){
+},{}],161:[function(require,module,exports){
 module.exports = function(hljs) {
   var DETAILS = {
     className: 'string',
@@ -15761,7 +16354,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],161:[function(require,module,exports){
+},{}],162:[function(require,module,exports){
 module.exports = function(hljs) {
   var SWIFT_KEYWORDS = {
       keyword: '__COLUMN__ __FILE__ __FUNCTION__ __LINE__ as as! as? associativity ' +
@@ -15878,7 +16471,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],162:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var COMMENT = {
@@ -15922,7 +16515,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],163:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -15958,7 +16551,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],164:[function(require,module,exports){
+},{}],165:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['tk'],
@@ -16019,7 +16612,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],165:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMAND = {
     className: 'tag',
@@ -16081,7 +16674,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],166:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILT_IN_TYPES = 'bool byte i16 i32 i64 double string binary';
   return {
@@ -16116,7 +16709,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],167:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 module.exports = function(hljs) {
   var TPID = {
     className: 'number',
@@ -16200,7 +16793,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],168:[function(require,module,exports){
+},{}],169:[function(require,module,exports){
 module.exports = function(hljs) {
   var PARAMS = {
     className: 'params',
@@ -16266,7 +16859,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],169:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -16422,7 +17015,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],170:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -16472,7 +17065,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],171:[function(require,module,exports){
+},{}],172:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['vb'],
@@ -16528,7 +17121,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],172:[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     subLanguage: 'xml',
@@ -16540,7 +17133,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],173:[function(require,module,exports){
+},{}],174:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['vbs'],
@@ -16579,7 +17172,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],174:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 module.exports = function(hljs) {
   var SV_KEYWORDS = {
     keyword:
@@ -16678,7 +17271,7 @@ module.exports = function(hljs) {
     ]
   }; // return
 };
-},{}],175:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 module.exports = function(hljs) {
   // Regular expression for VHDL numeric literals.
 
@@ -16739,7 +17332,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],176:[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     lexemes: /[!#@\w]+/,
@@ -16845,7 +17438,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],177:[function(require,module,exports){
+},{}],178:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -16981,7 +17574,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],178:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILTIN_MODULES =
     'ObjectLoader Animate MovieCredits Slides Filters Shading Materials LensFlare Mapping VLCAudioVideo ' +
@@ -17054,7 +17647,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],179:[function(require,module,exports){
+},{}],180:[function(require,module,exports){
 module.exports = function(hljs) {
   var XML_IDENT_RE = '[A-Za-z0-9\\._:-]+';
   var TAG_INTERNALS = {
@@ -17157,7 +17750,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],180:[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = 'for let if while then else return where group by xquery encoding version' +
     'module namespace boundary-space preserve strip default collation base-uri ordering' +
@@ -17228,7 +17821,7 @@ module.exports = function(hljs) {
     contains: CONTAINS
   };
 };
-},{}],181:[function(require,module,exports){
+},{}],182:[function(require,module,exports){
 module.exports = function(hljs) {
   var LITERALS = 'true false yes no null';
 
@@ -17316,7 +17909,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],182:[function(require,module,exports){
+},{}],183:[function(require,module,exports){
 module.exports = function(hljs) {
   var STRING = {
     className: 'string',
@@ -17423,7 +18016,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],183:[function(require,module,exports){
+},{}],184:[function(require,module,exports){
 /*
     angle.js <https://github.com/davidfig/anglejs>
     Released under MIT license <https://github.com/davidfig/angle/blob/master/LICENSE>

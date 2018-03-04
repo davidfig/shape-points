@@ -114,15 +114,16 @@ function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2)
 
 /**
  * Calculate points for smooth bezier curves passing through a series of points
- * based on https://www.particleincell.com/2012/bezier-splines/
- * @param {number} x1 - starting point
- * @param {number} y1
+ * uses https://github.com/soswow/fit-curve/blob/master/src/fit-curve.js
+ * uses ShapePoints.curveError=50 for error value
+ * @param {(number|number[])} x1 - starting point or array of points [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [y1]
  * @param {number} [x2]
  * @param {number} [y2]
  * ...
- * @param {number} xn - ending point
- * @param {number} yn
- * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ * @param {number} [xn] - ending point
+ * @param {number} [yn]
+ * @returns {number[]} [x1, y1, x2, y2, ... xn, yn]
  */
 function bezierCurveThrough()
 
