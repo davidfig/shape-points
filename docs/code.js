@@ -24,19 +24,14 @@ function test()
     control(125, 250)
     draw(ShapePoints.circle(125, 250, 75))
 
-    control(250, 250, 300, 250, 250, 200, 330, 190)
-    draw(ShapePoints.bezierCurveTo(250, 250, 250, 200, 330, 190, 300, 250), true)
+    control(300, 250, 300 + 50, 250, 300, 250 + 75)
+    draw(ShapePoints.ellipse(300, 250, 50, 75))
 
-    control(380, 250, 425, 320, 450, 200, 500, 240)
-    draw(ShapePoints.bezierCurveThrough(380, 250, 425, 320, 450, 200, 500, 240), true)
+    control(400, 250, 400, 200, 480, 190, 450, 250)
+    draw(ShapePoints.bezierCurveTo(400, 250, 400, 200, 480, 190, 450, 250), true)
 
-    control(600, 250, 600 + 50, 250, 600, 250 + 75)
-    draw(ShapePoints.ellipse(600, 250, 50, 75))
-
-    let i = 200
-
-    control(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 +i, 1500 + i, 0+i)
-    draw(ShapePoints.bezierCurveThrough(0 + i, 0 + i, 204 + i, -63 + i, 303 + i, -98 + i, 424 + i, -96 + i, 1500 + i, 0 + i))
+    control(510, 250, 580, 200, 630, 240, 555, 320)
+    draw(ShapePoints.bezierCurveThrough(510, 250, 580, 200, 630, 240, 555, 320), true)
 }
 
 function control()
@@ -88,6 +83,6 @@ window.onload = function ()
     c = canvas.getContext('2d')
 
     test()
-    require('fork-me-github')('https://github.com/davidfig/shape-points')
+    require('fork-me-github')()
     require('./highlight')()
 }

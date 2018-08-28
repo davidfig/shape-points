@@ -1,6 +1,6 @@
 {
     "name": "shape-points",
-    "version": "1.7.0",
+    "version": "2.0.0",
     "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "index.js",
     "directories": {
@@ -9,7 +9,7 @@
     "scripts": {
         "test": "budo --dir docs docs/code.js:index.js --live",
         "build": "browserify docs/code.js -o docs/index.js",
-        "docs": "markdown-api README.md index.js",
+        "docs": "markdown-api README.md line.js rect.js circle.js ellipse.js arc.js bezierCurveTo.js bezierCurveThrough.js",
         "prepublishOnly": "npm run build && npm run docs"
     },
     "repository": {
@@ -36,7 +36,7 @@
     },
     "homepage": "https://github.com/davidfig/shape-points#readme",
     "devDependencies": {
-        "fork-me-github": "^1.0.2",
+        "fork-me-github": "^1.2.0",
         "highlight.js": "^9.12.0"
     },
     "dependencies": {
