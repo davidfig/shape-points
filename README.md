@@ -47,13 +47,29 @@ module.exports = function line(x1, y1, x2, y2, thickness)
 
 /**
  * calculate points for rectangle
- * @param {number} x
+ * @param {number} x (center)
  * @param {number} y
  * @param {number} width
  * @param {number} height
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
 module.exports = function rect(x, y, width, height)
+
+/**
+ * calculate points for a rounded rectangle with one corner radius, or 4 separate corner radii
+ * @param {number} x (center)
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @param {number|object} radius
+ * @param {number} [radius.topLeft]
+ * @param {number} [radius.topRight]
+ * @param {number} [radius.bottomLeft]
+ * @param {number} [radius.bottomRight]
+ * @param {number} [pointsInArc=5]
+ * @returns {array} [x1, y1, x2, y2, ... xn, yn]
+ */
+module.exports = function roundedRect(x, y, width, height, radius, pointsInArc)
 
 /**
  * calculate points for a circle (calculates using pointsInArc * 4)

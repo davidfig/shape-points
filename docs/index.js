@@ -17957,7 +17957,7 @@ module.exports = function(hljs) {
 },{}],190:[function(require,module,exports){
 /**
  * calculate points for rectangle
- * @param {number} x
+ * @param {number} x (center)
  * @param {number} y
  * @param {number} width
  * @param {number} height
@@ -17977,7 +17977,7 @@ const arc = require('./arc')
 
 /**
  * calculate points for a rounded rectangle with one corner radius, or 4 separate corner radii
- * @param {number} x
+ * @param {number} x (center)
  * @param {number} y
  * @param {number} width
  * @param {number} height

@@ -1,6 +1,6 @@
 /**
  * calculate points for rectangle
- * @param {number} x
+ * @param {number} x (center)
  * @param {number} y
  * @param {number} width
  * @param {number} height

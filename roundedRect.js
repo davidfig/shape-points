@@ -2,7 +2,7 @@ const arc = require('./arc')
 
 /**
  * calculate points for a rounded rectangle with one corner radius, or 4 separate corner radii
- * @param {number} x
+ * @param {number} x (center)
  * @param {number} y
  * @param {number} width
  * @param {number} height
