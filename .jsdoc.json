@@ -1,0 +1,47 @@
+{
+    "applicationName": "shape-points",
+    "meta": {
+        "title": "shape-points",
+        "description": "",
+        "keyword": ""
+    },
+    "linenums": true,
+    "source": {
+        "include": [
+            "./index.js",
+            "./arc.js",
+            "./bezierCurveTo.js",
+            "./bezierCurveThrough.js",
+            "./circle.js",
+            "./ellipse.js",
+            "./line.js",
+            "./quadraticCurveTo.js",
+            "./rect.js",
+            "./roundedRect.js"
+        ]
+    },
+    "opts": {
+        "readme": "./README.md",
+        "encoding": "utf8",
+        "recurse": true,
+        "private": false,
+        "lenient": true,
+        "destination": "./docs/jsdoc"
+    },
+    "plugins": [
+        "plugins/markdown"
+    ],
+    "templates": {
+        "default": {
+            "outputSourceFiles": true
+        },
+        "applicationName": "shape-points",
+        "footer"        : "by YOPEY YOPEY LLC (yopeyopey.com)",
+        "copyright"     : "Copyright © 2019 YOPEY YOPEY LLC.",
+        "meta": {
+            "title": "shape-points API Documentation",
+            "description": "Documentation for shape-points library",
+            "keyword": "docs, documentation, html5, javascript, jsdoc, shape, points, arc, bezier, bezierCurveTo, circle, ellipse, quadraticCurveTo, roundedRect"
+        }
+    }
+}

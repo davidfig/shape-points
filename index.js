@@ -1,10 +1,11 @@
-module.exports = {
-    rect: require('./rect'),
-    arc: require('./arc'),
-    roundedRect: require('./roundedRect'),
-    line: require('./line'),
-    circle: require('./circle'),
-    ellipse: require('./ellipse'),
-    bezierCurveTo: require('./bezierCurveTo'),
-    bezierCurveThrough: require('./bezierCurveThrough')
-}
+/** @module shape-points */
+
+export { rect } from './rect'
+export { arc } from './arc'
+export { roundedRect } from './roundedRect'
+export { line } from './line'
+export { circle } from './circle'
+export { ellipse } from './ellipse'
+export { bezierCurveTo } from './bezierCurveTo'
+export { bezierCurveThrough } from './bezierCurveThrough'
+export { quadraticCurveTo } from './quadraticCurveTo'

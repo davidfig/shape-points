@@ -1,5 +1,6 @@
 /**
  * calculate points for a ellipse (calculates using pointsInArc * 4)
+ * @module shape-points/ellipse
  * @param {number} x
  * @param {number} y
  * @param {number} rx
@@ -7,7 +8,7 @@
  * @param {number} [pointsInArc=5]
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
-module.exports = function ellipse(x, y, rx, ry, pointsInArc)
+export function ellipse(x, y, rx, ry, pointsInArc)
 {
     pointsInArc = pointsInArc || 5
     const points = []

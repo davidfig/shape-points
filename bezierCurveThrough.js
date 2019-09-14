@@ -1,16 +1,16 @@
-const Curve = require('fit-curve')
+import Curve from 'fit-curve'
 
-const bezierCurveTo = require('./bezierCurveTo')
+import { bezierCurveTo } from './bezierCurveTo'
 
 /**
  * Calculate points for smooth bezier curves passing through a series of points
  * uses https://github.com/soswow/fit-curve/blob/master/src/fit-curve.js
  * uses ShapePoints.curveError=50 for error value
+ * @module shape-points/bezierCurveThrough
  * @param {(number|number[])} x1 - starting point or array of points [x1, y1, x2, y2, ... xn, yn]
  * @param {number} [y1]
  * @param {number} [x2]
  * @param {number} [y2]
- * ...
  * @param {number} [xn] - ending point
  * @param {number} [yn]
  * @param {object} [options]
@@ -18,7 +18,7 @@ const bezierCurveTo = require('./bezierCurveTo')
  * @param {number} [options.curveError=50]
  * @returns {number[]} [x1, y1, x2, y2, ... xn, yn]
  */
-module.exports = function bezierCurveThrough()
+export function bezierCurveThrough()
 {
     let pointsInArc = 5, curveError = 50
     const points = []

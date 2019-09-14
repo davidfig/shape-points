@@ -1,12 +1,13 @@
 /**
  * calculate points for a circle (calculates using pointsInArc * 4)
+ * @module shape-points/circle
  * @param {number} x
  * @param {number} y
  * @param {number} radius
  * @param {number} [pointsInArc=5]
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
-module.exports = function circle(x, y, radius, pointsInArc)
+export function circle(x, y, radius, pointsInArc)
 {
     pointsInArc = pointsInArc || 5
     const points = []

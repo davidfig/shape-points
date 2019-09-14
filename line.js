@@ -1,5 +1,6 @@
 /**
  * calculate points for a line with a certain thickness (either one thickness or a starting and ending thickness)
+ * @module shape-points/line
  * @param {number} x1
  * @param {number} y1
  * @param {number} x2
@@ -9,7 +10,7 @@
  * @param {number} thickness.end
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
-module.exports = function line(x1, y1, x2, y2, thickness)
+export function line(x1, y1, x2, y2, thickness)
 {
     thickness = thickness || 0
     const angle = Math.atan2(y2 - y1, x2 - x1)

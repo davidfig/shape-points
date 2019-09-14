@@ -1,6 +1,7 @@
 /**
  * Calculate points for a bezier curve with a starting point and two control points
  * from https://stackoverflow.com/a/15399173/1955997
+ * @module shape-points/bezierCurveTo
  * @param {number} x1 - starting point (usually a moveTo)
  * @param {number} y1 - starting point
  * @param {number} cp1x - first control point
@@ -12,7 +13,7 @@
  * @param {number} [pointsInArc=5]
  * @returns {array} [x1, y1, x2, y2, ... xn, yn]
  */
-module.exports = function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2, pointsInArc)
+export function bezierCurveTo(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2, pointsInArc)
 {
     pointsInArc = pointsInArc || 5
     const points = []

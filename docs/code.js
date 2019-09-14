@@ -1,4 +1,10 @@
-const ShapePoints = require('..')
+// all import example
+import * as ShapePoints from '..'
+import { quadraticCurveTo } from '..'
+
+import forkMe from 'fork-me-github'
+import highlight from './highlight'
+
 let c
 
 function test()
@@ -32,6 +38,9 @@ function test()
 
     control(510, 250, 580, 200, 630, 240, 555, 320)
     draw(ShapePoints.bezierCurveThrough(510, 250, 580, 200, 630, 240, 555, 320), true)
+
+    control(700, 250, 750, 200, 800, 250)
+    draw(quadraticCurveTo(700, 250, 750, 200, 800, 250), true)
 }
 
 function control()
@@ -83,6 +92,6 @@ window.onload = function ()
     c = canvas.getContext('2d')
 
     test()
-    require('fork-me-github')()
-    require('./highlight')()
+    forkMe()
+    highlight()
 }

@@ -1,16 +1,17 @@
 {
     "name": "shape-points",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "index.js",
     "directories": {
         "doc": "docs"
     },
     "scripts": {
-        "test": "budo --dir docs docs/code.js:index.js --live",
-        "build": "browserify docs/code.js -o docs/index.js",
-        "docs": "markdown-api README.md line.js rect.js roundedRect.js circle.js ellipse.js arc.js bezierCurveTo.js bezierCurveThrough.js",
-        "prepublishOnly": "npm run build && npm run docs"
+        "test": "rollup -c docs/rollup.dev.js --watch",
+        "build": "rollup -c rollup.config.js",
+        "build-demo": "rollup -c docs/rollup.config.js",
+        "docs": "jsdoc -c .jsdoc.json",
+        "prepublishOnly": "yarn build && yarn build-demo && yarn docs"
     },
     "repository": {
         "type": "git",
@@ -37,9 +38,16 @@
     "homepage": "https://github.com/davidfig/shape-points#readme",
     "devDependencies": {
         "fork-me-github": "^1.2.0",
-        "highlight.js": "^9.12.0"
+        "highlight.js": "^9.12.0",
+        "jsdoc": "^3.6.3",
+        "markdown-api": "^1.1.3",
+        "rollup": "^1.21.2",
+        "rollup-plugin-commonjs": "^10.1.0",
+        "rollup-plugin-node-resolve": "^5.2.0",
+        "rollup-plugin-serve": "^1.0.1"
     },
     "dependencies": {
-        "fit-curve": "^0.1.6"
+        "fit-curve": "^0.1.6",
+        "rollup-plugin-terser": "^5.1.2"
     }
 }
