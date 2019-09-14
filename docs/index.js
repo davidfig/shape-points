@@ -1114,7 +1114,11 @@
         sheet.insertRule('.' + a.className + '::after' + after + '}');
     };
 
-    var highlight = createCommonjsModule(function (module, exports) {
+    function createCommonjsModule$1(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    var highlight = createCommonjsModule$1(function (module, exports) {
     /*
     Syntax highlighting with language autodetection.
     https://highlightjs.org/
