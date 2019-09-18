@@ -1,6 +1,6 @@
 {
     "name": "shape-points",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "description": "Generate points for simple shapes and curves: arcs, rectangles, rounded rectangles, circles, ellipses, bezierCurveTo, bezierCurveThrough (i.e., bezier curves through specific points)",
     "main": "dist/shape-points.js",
     "module": "dist/shape-points.es.js",
@@ -45,10 +45,10 @@
         "rollup": "^1.21.2",
         "rollup-plugin-commonjs": "^10.1.0",
         "rollup-plugin-node-resolve": "^5.2.0",
-        "rollup-plugin-serve": "^1.0.1"
+        "rollup-plugin-serve": "^1.0.1",
+        "rollup-plugin-terser": "^5.1.2"
     },
     "dependencies": {
-        "fit-curve": "^0.1.6",
-        "rollup-plugin-terser": "^5.1.2"
+        "fit-curve": "^0.1.6"
     }
 }
