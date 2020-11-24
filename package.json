@@ -39,7 +39,7 @@
     "homepage": "https://github.com/davidfig/shape-points#readme",
     "devDependencies": {
         "fork-me-github": "^1.2.0",
-        "highlight.js": "^9.12.0",
+        "highlight.js": "^10.1.2",
         "jsdoc": "^3.6.3",
         "markdown-api": "^1.1.3",
         "rollup": "^1.21.2",
