@@ -11,10 +11,10 @@
  */
 export function arc(x, y, start, end, radius, pointsInArc)
 {
-    pointsInArc = pointsInArc || 5
+    pointsInArc = pointsInArc > 1 ? pointsInArc : 5
     const points = []
     let angle = start
-    const interval = (end - start) / pointsInArc
+    const interval = (end - start) / (pointsInArc - 1)
     for (let count = 0; count < pointsInArc; count++)
     {
         points.push(x + radius * Math.cos(angle), y + radius * Math.sin(angle))
