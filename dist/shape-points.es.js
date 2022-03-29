@@ -30,10 +30,10 @@ function rect(x, y, width, height)
  */
 function arc(x, y, start, end, radius, pointsInArc)
 {
-    pointsInArc = pointsInArc || 5;
+    pointsInArc = pointsInArc > 1 ? pointsInArc : 5;
     const points = [];
     let angle = start;
-    const interval = (end - start) / pointsInArc;
+    const interval = (end - start) / (pointsInArc - 1);
     for (let count = 0; count < pointsInArc; count++)
     {
         points.push(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
@@ -239,11 +239,6 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         }
     }
 
-    // ==ClosureCompiler==
-    // @output_file_name fit-curve.min.js
-    // @compilation_level SIMPLE_OPTIMIZATIONS
-    // ==/ClosureCompiler==
-
     /**
      *  @preserve  JavaScript implementation of
      *  Algorithm for Automatically Fitting Digitized Curves
@@ -267,13 +262,18 @@ var fitCurve = createCommonjsModule(function (module, exports) {
             throw new TypeError("First argument should be an array");
         }
         points.forEach(function (point) {
-            if (!Array.isArray(point) || point.length !== 2 || typeof point[0] !== 'number' || typeof point[1] !== 'number') {
-                throw Error("Each point should be an array of two numbers");
+            if (!Array.isArray(point) || point.some(function (item) {
+                return typeof item !== 'number';
+            }) || point.length !== points[0].length) {
+                throw Error("Each point should be an array of numbers. Each point should have the same amount of numbers.");
             }
         });
+
         // Remove duplicate points
         points = points.filter(function (point, i) {
-            return i === 0 || !(point[0] === points[i - 1][0] && point[1] === points[i - 1][1]);
+            return i === 0 || !point.every(function (val, j) {
+                return val === points[i - 1][j];
+            });
         });
 
         if (points.length < 2) {
@@ -328,7 +328,7 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         splitPoint = _generateAndReport[2];
 
 
-        if (maxError < error) {
+        if (maxError === 0 || maxError < error) {
             return [bezCurve];
         }
         //If error not too large, try some reparameterization and iteration
@@ -369,19 +369,21 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         //Fitting failed -- split at max error point and fit recursively
         beziers = [];
 
-        //To create a smooth transition from one curve segment to the next,
-        //we calculate the tangent of the points directly before and after the center,
-        //and use that same tangent both to and from the center point.
+        //To create a smooth transition from one curve segment to the next, we
+        //calculate the line between the points directly before and after the
+        //center, and use that as the tangent both to and from the center point.
         centerVector = maths.subtract(points[splitPoint - 1], points[splitPoint + 1]);
-        //However, should those two points be equal, the normal tangent calculation will fail.
-        //Instead, we calculate the tangent from that "double-point" to the center point, and rotate 90deg.
-        if (centerVector[0] === 0 && centerVector[1] === 0) {
-            //toCenterTangent = createTangent(points[splitPoint - 1], points[splitPoint]);
-            //fromCenterTangent = createTangent(points[splitPoint + 1], points[splitPoint]);
-
+        //However, this won't work if they're the same point, because the line we
+        //want to use as a tangent would be 0. Instead, we calculate the line from
+        //that "double-point" to the center point, and use its tangent.
+        if (centerVector.every(function (val) {
+            return val === 0;
+        })) {
             //[x,y] -> [-y,x]: http://stackoverflow.com/a/4780141/1869660
-            centerVector = maths.subtract(points[splitPoint - 1], points[splitPoint]).reverse();
-            centerVector[0] = -centerVector[0];
+            centerVector = maths.subtract(points[splitPoint - 1], points[splitPoint]);
+            var _ref = [-centerVector[1], centerVector[0]];
+            centerVector[0] = _ref[0];
+            centerVector[1] = _ref[1];
         }
         toCenterTangent = maths.normalize(centerVector);
         //To and from need to point in opposite directions:
@@ -574,9 +576,8 @@ var fitCurve = createCommonjsModule(function (module, exports) {
 
         var d = maths.subtract(bezier.q(bez, u), point),
             qprime = bezier.qprime(bez, u),
-            numerator = /*sum(*/maths.mulMatrix(d, qprime) /*)*/
-        ,
-            denominator = maths.sum(maths.addItems(maths.squareItems(qprime), maths.mulMatrix(d, bezier.qprimeprime(bez, u))));
+            numerator = maths.mulMatrix(d, qprime),
+            denominator = maths.sum(maths.squareItems(qprime)) + 2 * maths.mulMatrix(d, bezier.qprimeprime(bez, u));
 
         if (denominator === 0) {
             return u;
@@ -625,7 +626,7 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         i, count, point, t;
 
         maxDist = 0;
-        splitPoint = points.length / 2;
+        splitPoint = Math.floor(points.length / 2);
 
         var t_distMap = mapTtoRelativeDistances(bez, 10);
 
@@ -744,31 +745,35 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         };
 
         maths.mulItems = function mulItems(items, multiplier) {
-            //return items.map(x => x*multiplier);
-            return [items[0] * multiplier, items[1] * multiplier];
+            return items.map(function (x) {
+                return x * multiplier;
+            });
         };
 
         maths.mulMatrix = function mulMatrix(m1, m2) {
             //https://en.wikipedia.org/wiki/Matrix_multiplication#Matrix_product_.28two_matrices.29
             //Simplified to only handle 1-dimensional matrices (i.e. arrays) of equal length:
-            //  return m1.reduce((sum,x1,i) => sum + (x1*m2[i]),
-            //                   0);
-            return m1[0] * m2[0] + m1[1] * m2[1];
+            return m1.reduce(function (sum, x1, i) {
+                return sum + x1 * m2[i];
+            }, 0);
         };
 
         maths.subtract = function subtract(arr1, arr2) {
-            //return arr1.map((x1, i) => x1 - arr2[i]);
-            return [arr1[0] - arr2[0], arr1[1] - arr2[1]];
+            return arr1.map(function (x1, i) {
+                return x1 - arr2[i];
+            });
         };
 
         maths.addArrays = function addArrays(arr1, arr2) {
-            //return arr1.map((x1, i) => x1 + arr2[i]);
-            return [arr1[0] + arr2[0], arr1[1] + arr2[1]];
+            return arr1.map(function (x1, i) {
+                return x1 + arr2[i];
+            });
         };
 
         maths.addItems = function addItems(items, addition) {
-            //return items.map(x => x+addition);
-            return [items[0] + addition, items[1] + addition];
+            return items.map(function (x) {
+                return x + addition;
+            });
         };
 
         maths.sum = function sum(items) {
@@ -782,21 +787,19 @@ var fitCurve = createCommonjsModule(function (module, exports) {
         };
 
         maths.vectorLen = function vectorLen(v) {
-            var a = v[0],
-                b = v[1];
-            return Math.sqrt(a * a + b * b);
+            return Math.hypot.apply(Math, v);
         };
 
         maths.divItems = function divItems(items, divisor) {
-            //return items.map(x => x/divisor);
-            return [items[0] / divisor, items[1] / divisor];
+            return items.map(function (x) {
+                return x / divisor;
+            });
         };
 
         maths.squareItems = function squareItems(items) {
-            //return items.map(x => x*x);
-            var a = items[0],
-                b = items[1];
-            return [a * a, b * b];
+            return items.map(function (x) {
+                return x * x;
+            });
         };
 
         maths.normalize = function normalize(v) {

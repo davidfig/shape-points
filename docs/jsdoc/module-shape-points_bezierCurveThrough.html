@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: shape-points/ellipse</title>
+    <title>JSDoc: Module: shape-points/bezierCurveThrough</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Module: shape-points/ellipse</h1>
+    <h1 class="page-title">Module: shape-points/bezierCurveThrough</h1>
 
     
 
@@ -38,7 +38,9 @@
     <div class="container-overview">
     
         
-            <div class="description"><p>calculate points for a ellipse (calculates using pointsInArc * 4)</p></div>
+            <div class="description"><p>Calculate points for smooth bezier curves passing through a series of points
+uses https://github.com/soswow/fit-curve/blob/master/src/fit-curve.js
+uses ShapePoints.curveError=50 for error value</p></div>
         
 
         
@@ -71,8 +73,6 @@
         
 
         
-        <th>Default</th>
-        
 
         <th class="last">Description</th>
     </tr>
@@ -83,13 +83,16 @@
 
         <tr>
             
-                <td class="name"><code>x</code></td>
+                <td class="name"><code>x1</code></td>
             
 
             <td class="type">
             
                 
 <span class="param-type">number</span>
+|
+
+<span class="param-type">Array.&lt;number></span>
 
 
             
@@ -106,9 +109,38 @@
             
 
             
-                <td class="default">
+
+            <td class="description last"><p>starting point or array of points [x1, y1, x2, y2, ... xn, yn]</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>y1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
                 
                 </td>
+            
+
             
 
             <td class="description last"></td>
@@ -118,7 +150,7 @@
 
         <tr>
             
-                <td class="name"><code>y</code></td>
+                <td class="name"><code>x2</code></td>
             
 
             <td class="type">
@@ -133,6 +165,8 @@
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -140,10 +174,6 @@
                 </td>
             
 
-            
-                <td class="default">
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -153,7 +183,7 @@
 
         <tr>
             
-                <td class="name"><code>rx</code></td>
+                <td class="name"><code>y2</code></td>
             
 
             <td class="type">
@@ -168,6 +198,8 @@
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -175,10 +207,6 @@
                 </td>
             
 
-            
-                <td class="default">
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -188,7 +216,7 @@
 
         <tr>
             
-                <td class="name"><code>ry</code></td>
+                <td class="name"><code>xn</code></td>
             
 
             <td class="type">
@@ -203,6 +231,8 @@
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -211,14 +241,99 @@
             
 
             
-                <td class="default">
+
+            <td class="description last"><p>ending point</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>yn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
                 
                 </td>
+            
+
             
 
             <td class="description last"></td>
         </tr>
 
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
@@ -259,6 +374,52 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>curveError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    50
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -296,7 +457,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ellipse.js.html">ellipse.js</a>, <a href="ellipse.js.html#line1">line 1</a>
+        <a href="bezierCurveThrough.js.html">bezierCurveThrough.js</a>, <a href="bezierCurveThrough.js.html#line5">line 5</a>
     </li></ul></dd>
     
 
@@ -336,7 +497,7 @@
     </dt>
     <dd>
         
-<span class="param-type">array</span>
+<span class="param-type">Array.&lt;number></span>
 
 
     </dd>
